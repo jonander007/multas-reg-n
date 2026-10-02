@@ -167,6 +167,17 @@ nav.tabs .in button[aria-selected="true"]{color:var(--pitch);box-shadow:inset 0 
 .notice{background:color-mix(in srgb,var(--card) 25%,var(--surface));border:1px solid color-mix(in srgb,var(--card) 60%,var(--line));border-radius:8px;padding:10px 12px;font-size:14px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;z-index:9;max-width:calc(100% - 32px);text-align:center}
 .search{width:100%}
+.lockdlg{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.lockdlg[hidden]{display:none}
+.lockdlg form{background:var(--surface);color:var(--fg);border-radius:var(--r);padding:20px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px}
+.lockdlg h2{margin:0;font:700 22px/1.1 var(--display);text-transform:uppercase;letter-spacing:.03em}
+.lockdlg p{margin:0;font-size:14px;color:var(--muted)}
+.lockdlg input{width:100%}
+.lockdlg .err{color:var(--danger);font-size:14px;font-weight:600}
+.lockdlg .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+nav.tabs .in button .lk{display:none}
+body.locked nav.tabs .in button[data-lock] .lk{display:inline}
+.lockbtn{background:transparent;color:var(--pitch-ink);border:1px solid currentColor;opacity:.85;font-size:12px;padding:4px 8px;margin-top:6px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -177,6 +188,7 @@ nav.tabs .in button[aria-selected="true"]{color:var(--pitch);box-shadow:inset 0 
     <div>
       <h1>Multas Regi B</h1>
       <div class="sub">Iurretako · caja del equipo</div>
+      <button type="button" class="lockbtn" id="lockBtn" hidden>🔒 Bloquear</button>
     </div>
     <div class="bote"><b class="num" id="bote">0 €</b><span>pendiente</span></div>
   </div>
@@ -344,9 +356,9 @@ nav.tabs .in button[aria-selected="true"]{color:var(--pitch);box-shadow:inset 0 
     </div>
   </div>
   <div class="in" role="tablist">
-    <button role="tab" data-tab="poner" aria-selected="true" type="button">
+    <button role="tab" data-tab="poner" data-lock aria-selected="true" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="2" fill="currentColor" fill-opacity=".15"/><path d="M12 8v5M12 16.5v.5" stroke-linecap="round"/></svg>
-      Poner multa
+      <span><span class="lk">🔒 </span>Poner multa</span>
     </button>
     <button role="tab" data-tab="multas" aria-selected="false" type="button" style="order:1">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h12M8 12h12M8 18h12" stroke-linecap="round"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>
@@ -356,13 +368,25 @@ nav.tabs .in button[aria-selected="true"]{color:var(--pitch);box-shadow:inset 0 
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4" stroke-linecap="round"/></svg>
       Recuento
     </button>
-    <button role="tab" data-tab="anadir" aria-selected="false" type="button" style="order:2">
+    <button role="tab" data-tab="anadir" data-lock aria-selected="false" type="button" style="order:2">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8" stroke-linecap="round"/></svg>
-      Añadir
+      <span><span class="lk">🔒 </span>Añadir</span>
     </button>
   </div>
 </nav>
 <div class="toast" id="toast" hidden></div>
+<div class="lockdlg" id="lockDlg" hidden role="dialog" aria-modal="true" aria-labelledby="lockTitle">
+  <form id="lockForm" autocomplete="off">
+    <h2 id="lockTitle">Zona bloqueada</h2>
+    <p>Solo Sergio puede poner multas y añadir jugadores o tipos. Introduce la contraseña.</p>
+    <input type="password" id="lockPass" placeholder="Contraseña" aria-label="Contraseña">
+    <div class="err" id="lockErr" hidden>Contraseña incorrecta</div>
+    <div class="row2">
+      <button type="button" id="lockCancel">Cancelar</button>
+      <button type="submit" class="btn-main">Entrar</button>
+    </div>
+  </form>
+</div>
 
 <script>
 const $ = id => document.getElementById(id);
@@ -374,7 +398,7 @@ const fmtFecha = s => {const [y,m,d]=s.split('-').map(Number);return new Date(y,
 const fmtMes = s => {const [y,m]=s.split('-').map(Number);const t=new Date(y,m-1,1).toLocaleDateString('es-ES',{month:'long',year:'numeric'});return t.charAt(0).toUpperCase()+t.slice(1);};
 
 const S = {
-  db:null, jugadores:[], tipos:[], multas:[], loaded:{j:false,t:false,m:false}, canWrite:true,
+  db:null, jugadores:[], tipos:[], multas:[], loaded:{j:false,t:false,m:false}, canWrite:false, unlocked:false,
   fecha: todayStr(), sel:new Set(), tipoId:null, cantidad:1, minutos:0, busca:'',
   open:new Set(), confirm:null, hJug:'todos', hTipo:'todos', hMes:'todos', rModo:'sem', semana:null, editJug:null, editTipo:null, tab:'poner', fMes:'todos', fEstado:'pend'
 };
@@ -617,14 +641,40 @@ function notice(t){const n=$('notice');n.textContent=t;n.hidden=!t;}
 let confirmT; function armConfirm(k){S.confirm=k;clearTimeout(confirmT);confirmT=setTimeout(()=>{S.confirm=null;render();},4000);render();}
 
 /* ---------- eventos ---------- */
-document.querySelectorAll('nav.tabs [data-tab]').forEach(b=>b.addEventListener('click',()=>{
-  S.tab=b.dataset.tab;
-  document.querySelectorAll('nav.tabs [data-tab]').forEach(x=>x.setAttribute('aria-selected',x===b));
+/* ---------- bloqueo con contraseña (solo Sergio pone multas) ---------- */
+const LOCK_PASS='Borja99', LOCK_KEY='multas-desbloqueado', LOCKED_TABS=['poner','anadir'];
+let pendingTab=null;
+function setUnlocked(v){
+  S.unlocked=v; S.canWrite=v;
+  try{v?localStorage.setItem(LOCK_KEY,'1'):localStorage.removeItem(LOCK_KEY);}catch(e){}
+  document.body.classList.toggle('locked',!v);
+  $('lockBtn').hidden=!v;
+  if(!v && LOCKED_TABS.includes(S.tab)) showTab('recuento');
+  render();
+}
+function askPass(tab){
+  pendingTab=tab; $('lockPass').value=''; $('lockErr').hidden=true; $('lockDlg').hidden=false;
+  setTimeout(()=>$('lockPass').focus(),30);
+}
+$('lockForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  if($('lockPass').value===LOCK_PASS){$('lockDlg').hidden=true;setUnlocked(true);if(pendingTab)showTab(pendingTab);pendingTab=null;toast('Desbloqueado');}
+  else{$('lockErr').hidden=false;$('lockPass').select();}
+});
+$('lockCancel').addEventListener('click',()=>{$('lockDlg').hidden=true;pendingTab=null;});
+$('lockDlg').addEventListener('click',e=>{if(e.target.id==='lockDlg'){$('lockDlg').hidden=true;pendingTab=null;}});
+$('lockBtn').addEventListener('click',()=>{setUnlocked(false);toast('Bloqueado');});
+
+function showTab(tab){
+  if(LOCKED_TABS.includes(tab) && !S.unlocked){askPass(tab);return;}
+  S.tab=tab;
+  document.querySelectorAll('nav.tabs [data-tab]').forEach(x=>x.setAttribute('aria-selected',x.dataset.tab===tab));
   document.querySelectorAll('.tab').forEach(t=>t.hidden=t.id!=='tab-'+S.tab);
   $('bar').hidden = S.tab!=='poner'; document.body.classList.toggle('has-bar',S.tab==='poner');
   try{localStorage.setItem('multas-tab',S.tab);}catch(e){}
   window.scrollTo(0,0);
-}));
+}
+document.querySelectorAll('nav.tabs [data-tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 $('fecha').addEventListener('change',e=>{S.fecha=e.target.value||todayStr();render();});
 $('hoy').addEventListener('click',()=>{S.fecha=todayStr();render();});
 $('buscaJug').addEventListener('input',e=>{S.busca=e.target.value;renderPoner();});
@@ -712,9 +762,12 @@ $('mngTipo').addEventListener('click',async e=>{
 });
 
 /* ---------- arranque ---------- */
-document.body.classList.add('has-bar');
-try{const t=localStorage.getItem('multas-tab');if(t&&t!=='poner'){const b=document.querySelector(`nav.tabs [data-tab="${t}"]`);b&&b.click();}}catch(e){}
-render();
+let wasUnlocked=false; try{wasUnlocked=localStorage.getItem(LOCK_KEY)==='1';}catch(e){}
+setUnlocked(wasUnlocked);
+let startTab='poner'; try{startTab=localStorage.getItem('multas-tab')||'poner';}catch(e){}
+if(!document.querySelector(`nav.tabs [data-tab="${startTab}"]`)) startTab='poner';
+if(LOCKED_TABS.includes(startTab) && !S.unlocked) startTab='recuento';
+showTab(startTab);
 
 /* ---------- almacenamiento local (este navegador) ---------- */
 const LS_KEY='multas-regi-b-v1';
@@ -775,7 +828,7 @@ const localDb={
 // si se abre en otra pestaña del mismo navegador, mantener sincronizado
 window.addEventListener('storage',e=>{if(e.key!==LS_KEY||!e.newValue)return;try{store=JSON.parse(e.newValue);emitAll();}catch(_){}});
 
-S.db=localDb; S.writeTested=true;
+S.db=localDb; S.writeTested=true; S.canWrite=S.unlocked;
 localDb.collection('jugadores').onSnapshot(s=>{S.jugadores=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{numeric:true}));S.loaded.j=true;
   [...S.sel].forEach(id=>{if(!S.jugadores.some(j=>j.id===id))S.sel.delete(id);});render();});
 localDb.collection('tipos').onSnapshot(s=>{S.tipos=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.orden||0)-(b.orden||0));S.loaded.t=true;render();});
