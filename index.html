@@ -11,6 +11,18 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
 <title>Multas Iurretako Regi B</title>
+<script>
+/* Si el móvil tiene activado «Sitio de escritorio», el navegador ignora el viewport y
+   dibuja la página a ~980 px. Lo compensamos con zoom para que se vea a tamaño de móvil. */
+(function(){
+  function fit(){
+    var d=document.documentElement, sw=screen.width, w=window.innerWidth;
+    var touch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+    d.style.zoom = (touch && sw<700 && w>sw*1.3) ? (w/sw).toFixed(3) : '';
+  }
+  fit(); window.addEventListener('resize',fit); window.addEventListener('orientationchange',fit);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap">
@@ -198,9 +210,11 @@ body.has-bar main{padding-block-end:calc(var(--nav-h,200px) + 24px)}
 .bar .extra{flex-wrap:nowrap;padding:8px 10px}
 .bar .extra>span{min-width:0;font-size:15px;line-height:1.25}
 .bar .extra small{font-size:13px}
-nav.tabs .in button{white-space:nowrap}
+nav.tabs .in{grid-template-columns:repeat(4,minmax(0,1fr))}
+nav.tabs .in button{white-space:nowrap;min-width:0;overflow:hidden}
 .mrow{gap:6px}
 @media (max-width:380px){
+  nav.tabs .in button{letter-spacing:.02em;font-size:12px}
   .top h1{font-size:22px}
   .top .bote b{font-size:26px}
   .bar .btn-main{min-width:0;padding:13px 14px;font-size:16px}
