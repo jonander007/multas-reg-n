@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f5a3a">
+<title>Multas Iurretako Regi B</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+html{color-scheme:light}:root{padding-top:env(safe-area-inset-top,0px)}body{margin:0}[hidden]{display:none!important}
+/* Layout: libreta del delegado — cabecera tipo marcador, contenido en una columna, barra de pestañas abajo como en una app */
+:root{
+  --bg:#f3f5f1; --surface:#ffffff; --surface-2:#e8ece4; --line:#d3dacd;
+  --fg:#17221b; --muted:#5d6b61;
+  --pitch:#1f5a3a; --pitch-ink:#ffffff;
+  --card:#f2c230; --card-ink:#2a2105;
+  --danger:#b3322a; --ok:#2f7a4b;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101612; --surface:#18211b; --surface-2:#212c25; --line:#2f3c33;
+  --fg:#e7ede8; --muted:#97a69b;
+  --pitch:#3f9a68; --pitch-ink:#07130c;
+  --card:#f2c230; --card-ink:#2a2105;
+  --danger:#e0675e; --ok:#5fbf85; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101612; --surface:#18211b; --surface-2:#212c25; --line:#2f3c33;
+  --fg:#e7ede8; --muted:#97a69b;
+  --pitch:#3f9a68; --pitch-ink:#07130c;
+  --card:#f2c230; --card-ink:#2a2105;
+  --danger:#e0675e; --ok:#5fbf85; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:16px/1.45 var(--body);-webkit-tap-highlight-color:transparent}
+.num{font-variant-numeric:tabular-nums}
+header.top{background:var(--pitch);color:var(--pitch-ink);padding:18px 16px 16px}
+.top-in{max-width:720px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.top h1{font:800 26px/1 var(--display);letter-spacing:.02em;text-transform:uppercase;margin:0;text-wrap:balance}
+.top .sub{font:600 12px/1.2 var(--body);letter-spacing:.12em;text-transform:uppercase;opacity:.8;margin-top:6px}
+.top .bote{text-align:right}
+.top .bote b{display:block;font:800 30px/1 var(--display)}
+.top .bote span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.8}
+main{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:18px 110px;display:flex;flex-direction:column;gap:22px}
+body.has-bar main{padding-block-end:240px}
+body.has-bar .toast{bottom:calc(200px + env(safe-area-inset-bottom,0px))}
+h2{font:700 20px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04em;margin:0}
+.label{font:600 12px/1 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+section.block{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+input,select{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid var(--card);outline-offset:1px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:9px 12px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.btn-main{background:var(--card);color:var(--card-ink);border-color:transparent;font:700 18px/1 var(--display);text-transform:uppercase;letter-spacing:.05em;padding:15px 16px;width:100%}
+.btn-ghost{background:transparent}
+.btn-sm{padding:6px 10px;font-size:14px}
+.btn-danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,var(--line))}
+.date-row input[type=date]{flex:1 1 160px}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.chip{text-align:left;padding:10px 10px;font-weight:500;line-height:1.2;overflow-wrap:anywhere}
+.chip[aria-pressed="true"]{background:var(--pitch);color:var(--pitch-ink);border-color:var(--pitch)}
+.types{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden}
+.type{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;text-align:left;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;padding:11px 12px}
+.type:last-child{border-bottom:0}
+.type .n{font-weight:500;min-width:0}
+.type .p{font:700 18px/1 var(--display)}
+.type .h{grid-column:1/-1;font-size:13px;color:var(--muted)}
+.type[aria-pressed="true"]{background:color-mix(in srgb,var(--card) 30%,var(--surface));box-shadow:inset 4px 0 0 var(--card)}
+.extra{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.extra input{width:90px}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:40px;height:40px;padding:0;font-size:20px}
+.summary{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.summary .t{font:800 28px/1 var(--display)}
+.list{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.li{display:grid;grid-template-columns:1fr auto auto;gap:4px 10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.li .who{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.li .what{grid-column:1/2;font-size:14px;color:var(--muted);min-width:0;overflow-wrap:anywhere}
+.li .amt{font:700 18px/1 var(--display);text-align:right}
+.empty{color:var(--muted);padding:14px;border:1px dashed var(--line);border-radius:var(--r);text-align:center}
+.tot-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tot-card div b{display:block;font:800 24px/1.05 var(--display)}
+.tot-card div span{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.players{display:flex;flex-direction:column;gap:6px}
+.pl{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.pl>button{width:100%;border:0;border-radius:0;background:transparent;display:grid;grid-template-columns:28px 1fr auto auto;gap:10px;align-items:center;text-align:left;padding:12px}
+.pl .rank{font:700 16px/1 var(--display);color:var(--muted)}
+.pl .nm{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.pl .ct{font-size:13px;color:var(--muted)}
+.pl .debt{font:800 22px/1 var(--display);min-width:64px;text-align:right}
+.pl .debt.zero{color:var(--muted);font-weight:600}
+.pl .chev{color:var(--muted);transition:transform .15s}
+.pl.open .chev{transform:rotate(90deg)}
+.detail{border-top:1px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:14px;background:var(--surface-2)}
+.bd{width:100%;border-collapse:collapse;font-size:14px}
+.bd td{padding:6px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.bd td:nth-child(2){text-align:center;color:var(--muted);width:44px}
+.bd td:last-child{text-align:right;font-weight:600;width:70px}
+.it{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;font-size:14px;padding:7px 0;border-bottom:1px solid var(--line)}
+.it .d{color:var(--muted);white-space:nowrap}
+.it .c{min-width:0;overflow-wrap:anywhere}
+.it.paid .c,.it.paid .a{text-decoration:line-through;color:var(--muted)}
+.tag{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+.tag.on{background:var(--ok);color:#fff;border-color:transparent}
+.form{display:flex;flex-direction:column;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.form .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form label{display:flex;flex-direction:column;gap:5px;font-size:14px;color:var(--muted)}
+.check{flex-direction:row!important;align-items:center;gap:8px!important;color:var(--fg)!important}
+.check input{width:20px;height:20px}
+.mng{display:flex;flex-direction:column}
+.mrow{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.mrow .n{min-width:0;overflow-wrap:anywhere}
+.mrow .n small{display:block;color:var(--muted);font-size:13px}
+.mrow .p{font:700 17px/1 var(--display)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+nav.tabs .in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.bar{border-bottom:1px solid var(--line);padding:10px 16px;display:flex;flex-direction:column;gap:8px;max-width:720px;margin:0 auto;background:var(--surface)}
+.bar-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+.bar-sum{min-width:0;display:flex;flex-direction:column;gap:2px}
+.bar-sum span{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-sum b{font:800 26px/1 var(--display)}
+.bar .btn-main{width:auto;min-width:150px;padding:14px 18px}
+.bar #extra:empty{display:none}
+.bar .extra{justify-content:space-between}
+.stepper input{width:64px;text-align:center;height:44px;font:700 20px/1 var(--display)}
+.stepper button{width:44px;height:44px;font-size:22px;font-weight:600}
+.stepper b{min-width:36px;text-align:center;font:800 24px/1 var(--display)}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--surface-2);border-radius:10px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;font:700 16px/1 var(--display);text-transform:uppercase;letter-spacing:.05em;padding:10px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.filters.f3{grid-template-columns:1fr 1fr 1fr}
+@media (max-width:480px){.filters.f3{grid-template-columns:1fr 1fr}.filters.f3 select:first-child{grid-column:1/-1}}
+.hday{font:700 15px/1 var(--display);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:14px 0 6px;display:flex;justify-content:space-between}
+.hli{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.hli .who{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.hli .what{font-size:14px;color:var(--muted);min-width:0;overflow-wrap:anywhere}
+.hli .amt{font:700 18px/1 var(--display);grid-row:1/3;grid-column:2;align-self:center;text-align:right}
+.hli .amt small{display:block;font:500 11px/1.3 var(--body);color:var(--ok);margin-top:3px}
+.rg{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.rg .n{font-weight:500;min-width:0}
+.rg .p{font:800 20px/1 var(--display);background:var(--card);color:var(--card-ink);border-radius:6px;padding:5px 8px;align-self:start}
+.rg .h{font-size:13px;color:var(--muted)}
+.rg .s{font-size:12px;color:var(--muted)}
+.weeknav{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;text-align:center}
+.weeknav button{height:44px;font-size:24px;padding:0}
+.weeknav b{display:block;font:700 20px/1.1 var(--display);text-transform:uppercase;letter-spacing:.03em}
+.weeknav span{font-size:12px;color:var(--muted)}
+.rtab-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.rtab{width:100%;border-collapse:collapse;font-size:15px}
+.rtab th{font:600 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right;padding:10px 12px;border-bottom:1px solid var(--line)}
+.rtab th:first-child,.rtab td:first-child{text-align:left}
+.rtab td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+.rtab tr:last-child td{border-bottom:0}
+.rtab td:nth-child(3){font:700 17px/1 var(--display)}
+.rtab td.z{color:var(--muted)}
+.rtab tfoot td{font-weight:700;border-top:2px solid var(--line)}
+.rtipos{font-size:14px;color:var(--muted);line-height:1.5}
+.btn-like{display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:9px 12px;cursor:pointer}
+nav.tabs .in button{border:0;border-radius:0;background:transparent;padding:10px 2px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;font:700 13px/1.05 var(--display);text-align:center;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+nav.tabs .in button svg{width:22px;height:22px}
+nav.tabs .in button[aria-selected="true"]{color:var(--pitch);box-shadow:inset 0 3px 0 var(--pitch)}
+.notice{background:color-mix(in srgb,var(--card) 25%,var(--surface));border:1px solid color-mix(in srgb,var(--card) 60%,var(--line));border-radius:8px;padding:10px 12px;font-size:14px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;z-index:9;max-width:calc(100% - 32px);text-align:center}
+.search{width:100%}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div>
+      <h1>Multas Regi B</h1>
+      <div class="sub">Iurretako · caja del equipo</div>
+    </div>
+    <div class="bote"><b class="num" id="bote">0 €</b><span>pendiente</span></div>
+  </div>
+</header>
+
+<main>
+  <div id="notice" class="notice" hidden></div>
+
+  <!-- PONER MULTA -->
+  <div id="tab-poner" class="tab">
+    <section class="block">
+      <div class="label">Día</div>
+      <div class="row date-row">
+        <input type="date" id="fecha">
+        <button class="btn-sm" id="hoy" type="button">Hoy</button>
+      </div>
+    </section>
+
+    <section class="block" style="margin-top:22px">
+      <div class="row between">
+        <div class="label">Jugador <span id="selCount"></span></div>
+        <button class="btn-sm btn-ghost" id="clearSel" type="button">Quitar selección</button>
+      </div>
+      <input type="search" id="buscaJug" class="search" placeholder="Buscar jugador…">
+      <div class="chips" id="chips"></div>
+      <div class="label" style="text-transform:none;letter-spacing:0;font-size:13px">Puedes marcar varios a la vez (por ejemplo, partido perdido).</div>
+    </section>
+
+    <section class="block" style="margin-top:22px">
+      <div class="label">Multa</div>
+      <div class="types" id="types"></div>
+    </section>
+
+    <section class="block" style="margin-top:28px">
+      <div class="row between"><h2>Multas del día</h2><span class="num label" id="dayTotal"></span></div>
+      <div id="dayList"></div>
+    </section>
+  </div>
+
+  <!-- RECUENTO -->
+  <div id="tab-recuento" class="tab" hidden>
+    <section class="block">
+      <div class="row between"><h2>Resumen</h2></div>
+      <div class="seg" role="group" aria-label="Tipo de resumen">
+        <button type="button" data-rmodo="sem" aria-pressed="true">Semanal</button>
+        <button type="button" data-rmodo="tot" aria-pressed="false">Total</button>
+      </div>
+      <div class="weeknav" id="rWeek">
+        <button type="button" id="rPrev" aria-label="Semana anterior">‹</button>
+        <div><b id="rWeekLbl"></b><span id="rWeekSub"></span></div>
+        <button type="button" id="rNext" aria-label="Semana siguiente">›</button>
+      </div>
+      <div class="tot-card">
+        <div><b class="num" id="rTotal">0 €</b><span id="rTotalLbl">Total</span></div>
+        <div><b class="num" id="rPend">0 €</b><span>Pendiente</span></div>
+        <div><b class="num" id="rCount">0</b><span>Multas</span></div>
+      </div>
+      <div class="rtab-wrap"><table class="rtab"><thead><tr><th>Jugador</th><th>Nº</th><th>Total</th><th>Pend.</th></tr></thead><tbody id="rBody"></tbody></table></div>
+      <div id="rTipos"></div>
+      <button type="button" class="btn-main" id="rCopiar">Copiar resumen para WhatsApp</button>
+    </section>
+    <section class="block" style="margin-top:28px">
+      <h2>Deuda por jugador</h2>
+      <div class="filters">
+        <select id="fMes" aria-label="Mes"></select>
+        <select id="fEstado" aria-label="Estado">
+          <option value="pend">Pendiente</option>
+          <option value="todo">Todo</option>
+          <option value="pag">Pagado</option>
+        </select>
+      </div>
+      <div class="tot-card">
+        <div><b class="num" id="tTotal">0 €</b><span>Total</span></div>
+        <div><b class="num" id="tMultas">0</b><span>Multas</span></div>
+        <div><b class="num" id="tJug">0</b><span>Con deuda</span></div>
+      </div>
+      <button type="button" id="copiar">Copiar deudas del filtro</button>
+    </section>
+    <section class="block" style="margin-top:22px">
+      <h2>Lo que debe cada uno</h2>
+      <div class="players" id="players"></div>
+    </section>
+  </div>
+
+  <!-- MULTAS (historial y reglamento) -->
+  <div id="tab-multas" class="tab" hidden>
+    <div class="seg" role="group" aria-label="Vista">
+      <button type="button" data-vista="hist" aria-pressed="true">Historial</button>
+      <button type="button" data-vista="regl" aria-pressed="false">Reglamento</button>
+    </div>
+    <section class="block" id="vHist" style="margin-top:16px">
+      <div class="filters f3">
+        <select id="hJug" aria-label="Jugador"></select>
+        <select id="hTipo" aria-label="Tipo de multa"></select>
+        <select id="hMes" aria-label="Mes"></select>
+      </div>
+      <div class="row between"><span class="label num" id="hCount"></span><span class="num" style="font:800 22px/1 var(--display)" id="hTotal"></span></div>
+      <div id="hList"></div>
+    </section>
+    <section class="block" id="vRegl" style="margin-top:16px" hidden>
+      <div id="reglList"></div>
+      <p class="label" style="text-transform:none;letter-spacing:0;font-size:14px;line-height:1.5">Las multas se pagan la semana en que llega el mensaje con lo que debe cada uno, normalmente el primer lunes de cada mes.</p>
+    </section>
+  </div>
+
+  <!-- AÑADIR -->
+  <div id="tab-anadir" class="tab" hidden>
+    <section class="block">
+      <h2>Jugadores</h2>
+      <form class="form" id="formJug" autocomplete="off">
+        <label>Nombre<input id="jNombre" required maxlength="40" placeholder="Nombre del jugador"></label>
+        <div class="row">
+          <button class="btn-main" type="submit" id="jSubmit" style="flex:1">Añadir jugador</button>
+          <button type="button" id="jCancel" hidden>Cancelar</button>
+        </div>
+      </form>
+      <div class="mng" id="mngJug"></div>
+    </section>
+
+    <section class="block" style="margin-top:28px">
+      <h2>Tipos de multa</h2>
+      <form class="form" id="formTipo" autocomplete="off">
+        <label>Concepto<input id="tNombre" required maxlength="80" placeholder="Ej. Llegar tarde al gimnasio"></label>
+        <div class="grid2">
+          <label>Importe (€)<input id="tImporte" type="number" min="0" step="0.5" inputmode="decimal" required></label>
+          <label>Cómo se cobra
+            <select id="tModo">
+              <option value="fijo">Importe fijo</option>
+              <option value="cantidad">Por unidad (× cantidad)</option>
+              <option value="minutos">Por retraso (minutos)</option>
+            </select>
+          </label>
+        </div>
+        <div class="grid2" id="tMinBox" hidden>
+          <label>A partir de (min)<input id="tUmbral" type="number" min="0" step="1" value="10"></label>
+          <label>€ extra por minuto<input id="tExtra" type="number" min="0" step="0.5" value="1"></label>
+        </div>
+        <label id="tUniBox" hidden>Unidad<input id="tUnidad" maxlength="20" placeholder="Ej. prenda, semana, pica"></label>
+        <label>Nota (opcional)<input id="tNota" maxlength="120"></label>
+        <div class="row">
+          <button class="btn-main" type="submit" id="tSubmit" style="flex:1">Añadir multa</button>
+          <button type="button" id="tCancel" hidden>Cancelar</button>
+        </div>
+      </form>
+      <div class="mng" id="mngTipo"></div>
+    </section>
+
+    <section class="block" style="margin-top:28px">
+      <h2>Copia de seguridad</h2>
+      <p style="margin:0;color:var(--muted);font-size:14px">Los datos se guardan solo en este navegador. Descarga una copia de vez en cuando; si cambias de móvil o se borra el navegador, la recuperas con «Cargar copia».</p>
+      <div class="row">
+        <button type="button" id="bExport" style="flex:1">Descargar copia</button>
+        <label class="btn-like" style="flex:1">Cargar copia<input type="file" id="bImport" accept=".json,application/json" hidden></label>
+      </div>
+    </section>
+  </div>
+</main>
+
+<nav class="tabs" aria-label="Secciones">
+  <div class="bar" id="bar">
+    <div id="extra"></div>
+    <div class="bar-row">
+      <div class="bar-sum"><span id="sumTxt">Elige jugador y multa</span><b class="num" id="sumAmt">0 €</b></div>
+      <button class="btn-main" id="poner" type="button" disabled>Poner multa</button>
+    </div>
+  </div>
+  <div class="in" role="tablist">
+    <button role="tab" data-tab="poner" aria-selected="true" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="2" fill="currentColor" fill-opacity=".15"/><path d="M12 8v5M12 16.5v.5" stroke-linecap="round"/></svg>
+      Poner multa
+    </button>
+    <button role="tab" data-tab="multas" aria-selected="false" type="button" style="order:1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h12M8 12h12M8 18h12" stroke-linecap="round"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>
+      Multas
+    </button>
+    <button role="tab" data-tab="recuento" aria-selected="false" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4" stroke-linecap="round"/></svg>
+      Recuento
+    </button>
+    <button role="tab" data-tab="anadir" aria-selected="false" type="button" style="order:2">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8" stroke-linecap="round"/></svg>
+      Añadir
+    </button>
+  </div>
+</nav>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const eur = n => (Math.round(n*100)/100).toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:2})+' €';
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2,'0');
+const todayStr = () => {const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());};
+const fmtFecha = s => {const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});};
+const fmtMes = s => {const [y,m]=s.split('-').map(Number);const t=new Date(y,m-1,1).toLocaleDateString('es-ES',{month:'long',year:'numeric'});return t.charAt(0).toUpperCase()+t.slice(1);};
+
+const S = {
+  db:null, jugadores:[], tipos:[], multas:[], loaded:{j:false,t:false,m:false}, canWrite:true,
+  fecha: todayStr(), sel:new Set(), tipoId:null, cantidad:1, minutos:0, busca:'',
+  open:new Set(), confirm:null, hJug:'todos', hTipo:'todos', hMes:'todos', rModo:'sem', semana:null, editJug:null, editTipo:null, tab:'poner', fMes:'todos', fEstado:'pend'
+};
+
+/* ---------- helpers de datos ---------- */
+const jugNombre = id => (S.jugadores.find(j=>j.id===id)||{}).nombre;
+const tipoById = id => S.tipos.find(t=>t.id===id);
+function calcImporte(t, cantidad, minutos){
+  if(!t) return 0;
+  const base = Number(t.importe)||0;
+  if(t.modo==='minutos'){ const ex = Math.max(0,(Number(minutos)||0)-(Number(t.umbral)||0)); return base + ex*(Number(t.extra)||0); }
+  if(t.modo==='cantidad') return base*Math.max(1,Number(cantidad)||1);
+  return base;
+}
+function detalleTxt(m){
+  if(m.minutos) return m.concepto+' · '+m.minutos+' min';
+  if(m.cantidad>1) return m.concepto+' × '+m.cantidad;
+  return m.concepto;
+}
+
+/* ---------- render ---------- */
+function render(){
+  const pend = S.multas.filter(m=>!m.pagada).reduce((a,m)=>a+(Number(m.importe)||0),0);
+  $('bote').textContent = eur(pend);
+  renderPoner(); renderResumen(); renderRecuento(); renderMultas(); renderAnadir();
+}
+
+function renderPoner(){
+  $('fecha').value = S.fecha;
+  // jugadores
+  const q = S.busca.trim().toLowerCase();
+  const js = S.jugadores.filter(j=>!q || j.nombre.toLowerCase().includes(q));
+  $('chips').innerHTML = !S.loaded.j ? '<div class="empty">Cargando jugadores…</div>'
+    : !S.jugadores.length ? '<div class="empty">Aún no hay jugadores. Añádelos en la pestaña Añadir.</div>'
+    : js.map(j=>`<button type="button" class="chip" data-j="${esc(j.id)}" aria-pressed="${S.sel.has(j.id)}">${esc(j.nombre)}</button>`).join('') || '<div class="empty">Ningún jugador con ese nombre.</div>';
+  $('selCount').textContent = S.sel.size>1 ? '· '+S.sel.size+' marcados' : '';
+  $('clearSel').hidden = !S.sel.size;
+  // tipos
+  $('types').innerHTML = !S.loaded.t ? '<div class="empty">Cargando multas…</div>'
+    : !S.tipos.length ? '<div class="empty">No hay tipos de multa. Créalos en Añadir.</div>'
+    : S.tipos.map(t=>{
+      const hint = t.modo==='minutos' ? `+${eur(t.extra)} por minuto desde el minuto ${t.umbral}` : t.modo==='cantidad' ? `por ${t.unidad||'unidad'}` : '';
+      const h = [hint,t.nota].filter(Boolean).join(' · ');
+      return `<button type="button" class="type" data-t="${esc(t.id)}" aria-pressed="${S.tipoId===t.id}"><span class="n">${esc(t.nombre)}</span><span class="p num">${eur(t.importe)}</span>${h?`<span class="h">${esc(h)}</span>`:''}</button>`;
+    }).join('');
+  // extra
+  const t = tipoById(S.tipoId);
+  let ex='';
+  if(t && t.modo==='minutos') ex = `<div class="extra"><span>Minutos tarde<br><small style="color:var(--muted)">${eur(t.importe)} hasta el min ${t.umbral}, luego +${eur(t.extra)}/min</small><br><small id="exCalc" style="font-weight:600"></small></span><div class="stepper"><button type="button" data-mstep="-1" aria-label="Un minuto menos">−</button><input id="minIn" type="number" min="0" step="1" inputmode="numeric" value="${S.minutos}" aria-label="Minutos de retraso"><button type="button" data-mstep="1" aria-label="Un minuto más">+</button></div></div>`;
+  if(t && t.modo==='cantidad') ex = `<div class="extra"><span>Cantidad<br><small style="color:var(--muted)">${eur(t.importe)} por ${esc(t.unidad||'unidad')}</small><br><small id="exCalc" style="font-weight:600"></small></span><div class="stepper"><button type="button" data-step="-1" aria-label="Menos">−</button><b class="num" id="cantOut">${S.cantidad}</b><button type="button" data-step="1" aria-label="Más">+</button></div></div>`;
+  const exEl=$('extra'); const k=t?t.id+t.modo:'';
+  if(exEl.dataset.k!==k){exEl.innerHTML=ex;exEl.dataset.k=k;}
+  else if(t && t.modo==='cantidad'){$('cantOut').textContent=S.cantidad;}
+  else if(t && t.modo==='minutos' && document.activeElement!==$('minIn')){$('minIn').value=S.minutos;}
+  updateSummary();
+  // lista del día
+  const dia = S.multas.filter(m=>m.fecha===S.fecha).sort((a,b)=>(b.creado||0)-(a.creado||0));
+  $('dayTotal').textContent = dia.length ? eur(dia.reduce((a,m)=>a+m.importe,0)) : '';
+  $('dayList').innerHTML = dia.length ? '<div class="list">'+dia.map(m=>`
+    <div class="li"><span class="who">${esc(jugNombre(m.jugadorId)||m.jugadorNombre||'Jugador borrado')}</span>
+    <span class="amt num">${eur(m.importe)}</span>
+    ${S.canWrite?`<button type="button" class="btn-sm btn-danger" data-del="${esc(m.id)}">${S.confirm==='del:'+m.id?'¿Borrar?':'Quitar'}</button>`:'<span></span>'}
+    <span class="what">${esc(detalleTxt(m))}${m.pagada?' · pagada':''}</span></div>`).join('')+'</div>'
+    : `<div class="empty">Sin multas el ${esc(fmtFecha(S.fecha))}.</div>`;
+}
+
+function updateSummary(){
+  const t = tipoById(S.tipoId);
+  const imp = calcImporte(t,S.cantidad,S.minutos);
+  const n = S.sel.size;
+  const ec=document.getElementById('exCalc');
+  if(ec&&t){
+    if(t.modo==='minutos'){const mn=S.minutos||0, ex=mn-(Number(t.umbral)||0);
+      ec.textContent = ex>0 ? `${mn} min → ${eur(t.importe)} + ${ex} × ${eur(t.extra)} = ${eur(imp)}` : `${mn} min → sin recargo = ${eur(imp)}`;}
+    else if(t.modo==='cantidad'){ec.textContent=`${S.cantidad} × ${eur(t.importe)} = ${eur(imp)}`;}
+  }
+  $('sumAmt').textContent = eur(imp*Math.max(n,1));
+  $('sumTxt').textContent = !n&&!t ? 'Elige jugador y multa' : !n ? 'Falta elegir jugador' : !t ? 'Falta elegir multa' : n===1 ? (jugNombre([...S.sel][0])||'') : n+' jugadores × '+eur(imp);
+  $('poner').disabled = !n || !t || !S.canWrite || !S.db;
+  $('poner').textContent = n>1 ? 'Poner '+n+' multas' : 'Poner multa';
+}
+
+function filtradas(){
+  return S.multas.filter(m=>{
+    if(S.fMes!=='todos' && m.fecha.slice(0,7)!==S.fMes) return false;
+    if(S.fEstado==='pend' && m.pagada) return false;
+    if(S.fEstado==='pag' && !m.pagada) return false;
+    return true;
+  });
+}
+
+function renderRecuento(){
+  const meses = [...new Set(S.multas.map(m=>m.fecha.slice(0,7)))].sort().reverse();
+  if(S.fMes!=='todos' && !meses.includes(S.fMes)) S.fMes='todos';
+  $('fMes').innerHTML = '<option value="todos">Todos los meses</option>'+meses.map(m=>`<option value="${m}">${fmtMes(m)}</option>`).join('');
+  $('fMes').value=S.fMes; $('fEstado').value=S.fEstado;
+  const ms = filtradas();
+  const porJ = new Map();
+  S.jugadores.forEach(j=>porJ.set(j.id,{id:j.id,nombre:j.nombre,items:[]}));
+  ms.forEach(m=>{ if(!porJ.has(m.jugadorId)) porJ.set(m.jugadorId,{id:m.jugadorId,nombre:m.jugadorNombre||'Jugador borrado',items:[],borrado:true}); porJ.get(m.jugadorId).items.push(m); });
+  const arr=[...porJ.values()].filter(p=>!p.borrado||p.items.length).map(p=>({...p,total:p.items.reduce((a,m)=>a+m.importe,0)}))
+    .sort((a,b)=>b.total-a.total||a.nombre.localeCompare(b.nombre,'es',{numeric:true}));
+  $('tTotal').textContent=eur(ms.reduce((a,m)=>a+m.importe,0));
+  $('tMultas').textContent=ms.length;
+  $('tJug').textContent=arr.filter(p=>p.total>0).length;
+  if(!S.loaded.j||!S.loaded.m){$('players').innerHTML='<div class="empty">Cargando…</div>';return;}
+  if(!arr.length){$('players').innerHTML='<div class="empty">No hay jugadores todavía.</div>';return;}
+  $('players').innerHTML = arr.map((p,i)=>{
+    const open=S.open.has(p.id);
+    let det='';
+    if(open){
+      if(!p.items.length) det='<div class="detail"><div class="empty">Sin multas con este filtro.</div></div>';
+      else{
+        const g=new Map(); p.items.forEach(m=>{const k=m.concepto;const o=g.get(k)||{n:0,s:0};o.n+=Math.max(1,m.cantidad||1)*(m.minutos?0:1)+(m.minutos?1:0);o.s+=m.importe;g.set(k,o);});
+        const rows=[...g.entries()].sort((a,b)=>b[1].s-a[1].s).map(([k,o])=>`<tr><td>${esc(k)}</td><td class="num">×${o.n}</td><td class="num">${eur(o.s)}</td></tr>`).join('');
+        const its=[...p.items].sort((a,b)=>b.fecha.localeCompare(a.fecha)||(b.creado||0)-(a.creado||0)).map(m=>`
+          <div class="it${m.pagada?' paid':''}"><span class="d">${esc(fmtFecha(m.fecha))}</span><span class="c">${esc(detalleTxt(m))}</span><span class="a num">${eur(m.importe)}</span>
+          ${S.canWrite?`<button type="button" class="tag${m.pagada?' on':''}" data-pay="${esc(m.id)}">${m.pagada?'Pagada':'Pendiente'}</button>`:`<span class="tag${m.pagada?' on':''}">${m.pagada?'Pagada':'Pendiente'}</span>`}</div>`).join('');
+        const pendN=p.items.filter(m=>!m.pagada).length;
+        det=`<div class="detail">
+          <div><div class="label" style="margin-bottom:6px">Por tipo de multa</div><table class="bd"><tbody>${rows}</tbody></table></div>
+          <div><div class="label" style="margin-bottom:6px">Por fecha</div>${its}</div>
+          ${S.canWrite&&pendN?`<button type="button" data-payall="${esc(p.id)}">${S.confirm==='pay:'+p.id?'Confirmar: '+pendN+' multas pagadas':'Marcar todo como pagado'}</button>`:''}
+        </div>`;
+      }
+    }
+    return `<div class="pl${open?' open':''}"><button type="button" data-open="${esc(p.id)}" aria-expanded="${open}">
+      <span class="rank num">${p.total>0?i+1:'–'}</span>
+      <span><span class="nm">${esc(p.nombre)}</span><br><span class="ct">${p.items.length} ${p.items.length===1?'multa':'multas'}</span></span>
+      <span class="debt num${p.total?'':' zero'}">${eur(p.total)}</span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
+    </button>${det}</div>`;
+  }).join('');
+}
+
+function renderMultas(){
+  // filtros
+  const opt=(v,t,sel)=>`<option value="${esc(v)}"${v===sel?' selected':''}>${esc(t)}</option>`;
+  if(S.hJug!=='todos'&&!S.jugadores.some(j=>j.id===S.hJug)&&!S.multas.some(m=>m.jugadorId===S.hJug)) S.hJug='todos';
+  $('hJug').innerHTML=opt('todos','Todos los jugadores',S.hJug)+S.jugadores.map(j=>opt(j.id,j.nombre,S.hJug)).join('');
+  $('hTipo').innerHTML=opt('todos','Todas las multas',S.hTipo)+S.tipos.map(t=>opt(t.id,t.nombre,S.hTipo)).join('');
+  const meses=[...new Set(S.multas.map(m=>m.fecha.slice(0,7)))].sort().reverse();
+  if(S.hMes!=='todos'&&!meses.includes(S.hMes)) S.hMes='todos';
+  $('hMes').innerHTML=opt('todos','Todos los meses',S.hMes)+meses.map(m=>opt(m,fmtMes(m),S.hMes)).join('');
+  const ms=S.multas.filter(m=>(S.hJug==='todos'||m.jugadorId===S.hJug)&&(S.hTipo==='todos'||m.tipoId===S.hTipo)&&(S.hMes==='todos'||m.fecha.slice(0,7)===S.hMes))
+    .sort((a,b)=>b.fecha.localeCompare(a.fecha)||(b.creado||0)-(a.creado||0));
+  $('hCount').textContent=ms.length+(ms.length===1?' multa':' multas');
+  $('hTotal').textContent=eur(ms.reduce((a,m)=>a+m.importe,0));
+  if(!S.loaded.m){$('hList').innerHTML='<div class="empty">Cargando…</div>';}
+  else if(!ms.length){$('hList').innerHTML=`<div class="empty">${S.multas.length?'Ninguna multa con estos filtros.':'Todavía no se ha puesto ninguna multa. Ponlas desde la pestaña Poner.'}</div>`;}
+  else{
+    const g=new Map(); ms.forEach(m=>{if(!g.has(m.fecha))g.set(m.fecha,[]);g.get(m.fecha).push(m);});
+    $('hList').innerHTML=[...g.entries()].map(([f,arr])=>`<div class="hday"><span>${esc(fmtFecha(f))}</span><span class="num">${eur(arr.reduce((a,m)=>a+m.importe,0))}</span></div>`+
+      arr.map(m=>`<div class="hli"><span class="who">${esc(jugNombre(m.jugadorId)||m.jugadorNombre||'Jugador borrado')}</span><span class="amt num">${eur(m.importe)}${m.pagada?'<small>Pagada</small>':''}</span><span class="what">${esc(detalleTxt(m))}</span></div>`).join('')).join('');
+  }
+  // reglamento
+  $('reglList').innerHTML=S.tipos.length?S.tipos.map(t=>{
+    const h=t.modo==='minutos'?`A partir del minuto ${t.umbral}, +${eur(t.extra)} por cada minuto más`:t.modo==='cantidad'?`Por cada ${t.unidad||'unidad'}`:'';
+    const n=S.multas.filter(m=>m.tipoId===t.id).length;
+    return `<div class="rg"><span class="n">${esc(t.nombre)}</span><span class="p num">${eur(t.importe)}</span>${h?`<span class="h">${esc(h)}</span>`:''}${t.nota?`<span class="h">${esc(t.nota)}</span>`:''}<span class="s">${n? 'Puesta '+n+(n===1?' vez':' veces'):'Sin estrenar'}</span></div>`;
+  }).join(''):'<div class="empty">No hay tipos de multa.</div>';
+}
+$('hJug').addEventListener('change',e=>{S.hJug=e.target.value;renderMultas();});
+$('hTipo').addEventListener('change',e=>{S.hTipo=e.target.value;renderMultas();});
+$('hMes').addEventListener('change',e=>{S.hMes=e.target.value;renderMultas();});
+document.querySelectorAll('[data-vista]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-vista]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  $('vHist').hidden=b.dataset.vista!=='hist'; $('vRegl').hidden=b.dataset.vista!=='regl';
+}));
+
+/* ---------- resumen semanal / total ---------- */
+const toDate=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);};
+const toStr=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const addDays=(s,n)=>{const d=toDate(s);d.setDate(d.getDate()+n);return toStr(d);};
+const lunes=s=>{const d=toDate(s);const w=(d.getDay()+6)%7;d.setDate(d.getDate()-w);return toStr(d);};
+const corto=s=>toDate(s).toLocaleDateString('es-ES',{day:'numeric',month:'short'}).replace('.','');
+S.semana=lunes(todayStr());
+function resumenDatos(){
+  let ms=S.multas, titulo='Resumen total';
+  if(S.rModo==='sem'){const ini=S.semana,fin=addDays(ini,6);ms=ms.filter(m=>m.fecha>=ini&&m.fecha<=fin);titulo='Semana del '+corto(ini)+' al '+corto(fin);}
+  const map=new Map();
+  ms.forEach(m=>{const o=map.get(m.jugadorId)||{n:jugNombre(m.jugadorId)||m.jugadorNombre||'Jugador borrado',c:0,t:0,p:0};o.c++;o.t+=m.importe;if(!m.pagada)o.p+=m.importe;map.set(m.jugadorId,o);});
+  const filas=[...map.values()].sort((a,b)=>b.t-a.t||a.n.localeCompare(b.n,'es'));
+  const tipos=new Map(); ms.forEach(m=>{const o=tipos.get(m.concepto)||{c:0,t:0};o.c++;o.t+=m.importe;tipos.set(m.concepto,o);});
+  return {ms,filas,titulo,tipos:[...tipos.entries()].sort((a,b)=>b[1].c-a[1].c||b[1].t-a[1].t),
+    total:ms.reduce((a,m)=>a+m.importe,0),pend:ms.filter(m=>!m.pagada).reduce((a,m)=>a+m.importe,0)};
+}
+function renderResumen(){
+  $('rWeek').hidden=S.rModo!=='sem';
+  document.querySelectorAll('[data-rmodo]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.rmodo===S.rModo));
+  const R=resumenDatos();
+  if(S.rModo==='sem'){
+    const ini=S.semana; $('rWeekLbl').textContent=corto(ini)+' – '+corto(addDays(ini,6));
+    const act=lunes(todayStr()); const diff=Math.round((toDate(act)-toDate(ini))/864e5/7);
+    $('rWeekSub').textContent=diff===0?'Esta semana':diff===1?'Semana pasada':diff>1?'Hace '+diff+' semanas':'Semana próxima';
+    $('rNext').disabled=ini>=act;
+  }
+  $('rTotal').textContent=eur(R.total); $('rTotalLbl').textContent=S.rModo==='sem'?'Semana':'Total';
+  $('rPend').textContent=eur(R.pend); $('rCount').textContent=R.ms.length;
+  $('rBody').innerHTML=R.filas.length?R.filas.map(f=>`<tr><td>${esc(f.n)}</td><td>${f.c}</td><td>${eur(f.t)}</td><td class="${f.p?'':'z'}">${f.p?eur(f.p):'—'}</td></tr>`).join('')
+    :`<tr><td colspan="4" class="z" style="text-align:center;padding:16px">${S.rModo==='sem'?'Ninguna multa esta semana.':'Todavía no hay multas.'}</td></tr>`;
+  $('rTipos').innerHTML=R.tipos.length?'<div class="rtipos"><b style="color:var(--fg)">Más repetidas:</b> '+R.tipos.slice(0,3).map(([k,o])=>esc(k)+' ('+o.c+')').join(' · ')+'</div>':'';
+  $('rCopiar').disabled=!R.ms.length;
+}
+function copyText(txt){
+  const done=()=>toast('Resumen copiado');
+  const fallback=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){toast('No se pudo copiar');}ta.remove();};
+  try{navigator.clipboard.writeText(txt).then(done,fallback);}catch(e){fallback();}
+}
+document.querySelectorAll('[data-rmodo]').forEach(b=>b.addEventListener('click',()=>{S.rModo=b.dataset.rmodo;renderResumen();}));
+$('rPrev').addEventListener('click',()=>{S.semana=addDays(S.semana,-7);renderResumen();});
+$('rNext').addEventListener('click',()=>{S.semana=addDays(S.semana,7);renderResumen();});
+$('rCopiar').addEventListener('click',()=>{
+  const R=resumenDatos();
+  const lineas=R.filas.map(f=>S.rModo==='sem'?`• ${f.n}: ${eur(f.t)} (${f.c} ${f.c===1?'multa':'multas'})`:`• ${f.n}: ${eur(f.t)}${f.p&&f.p!==f.t?' · debe '+eur(f.p):f.p?'':' · pagado'}`);
+  const pie=S.rModo==='sem'?[`Total semana: ${eur(R.total)}`]:[`Total multas: ${eur(R.total)}`,`Pendiente de pagar: ${eur(R.pend)}`];
+  const top=R.tipos.slice(0,3).map(([k,o])=>`${k} (${o.c})`).join(', ');
+  copyText([`*Multas Regi B · ${R.titulo}*`,'',...lineas,'',...pie,...(top?['','Más repetidas: '+top]:[])].join('\n'));
+});
+
+function renderAnadir(){
+  $('mngJug').innerHTML = S.jugadores.length ? S.jugadores.map(j=>{
+    const n=S.multas.filter(m=>m.jugadorId===j.id).length;
+    return `<div class="mrow"><span class="n">${esc(j.nombre)}<small>${n} ${n===1?'multa':'multas'}</small></span><span></span>
+    ${S.canWrite?`<button type="button" class="btn-sm" data-ej="${esc(j.id)}">Editar</button><button type="button" class="btn-sm btn-danger" data-dj="${esc(j.id)}">${S.confirm==='dj:'+j.id?'¿Seguro?':'Borrar'}</button>`:'<span></span><span></span>'}</div>`;
+  }).join('') : '<div class="empty">Sin jugadores.</div>';
+  $('mngTipo').innerHTML = S.tipos.length ? S.tipos.map(t=>{
+    const h = t.modo==='minutos'?`+${eur(t.extra)}/min desde el min ${t.umbral}`:t.modo==='cantidad'?`por ${t.unidad||'unidad'}`:'fijo';
+    return `<div class="mrow"><span class="n">${esc(t.nombre)}<small>${esc(h)}</small></span><span class="p num">${eur(t.importe)}</span>
+    ${S.canWrite?`<button type="button" class="btn-sm" data-et="${esc(t.id)}">Editar</button><button type="button" class="btn-sm btn-danger" data-dt="${esc(t.id)}">${S.confirm==='dt:'+t.id?'¿Seguro?':'Borrar'}</button>`:'<span></span><span></span>'}</div>`;
+  }).join('') : '<div class="empty">Sin tipos de multa.</div>';
+  ['formJug','formTipo'].forEach(f=>$(f).querySelectorAll('input,select,button').forEach(el=>el.disabled=!S.canWrite||!S.db));
+}
+
+/* ---------- toast ---------- */
+let tt; function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2400);}
+function fail(e){ if(e&&e.code==='invalid_argument'&&!S.writeTested){S.canWrite=false;notice('Tienes acceso de solo lectura: puedes ver las multas pero no cambiarlas.');render();return;}
+  toast(e&&e.code==='quota_exceeded'?'No queda espacio para más registros.':'No se pudo guardar. Inténtalo de nuevo.'); }
+function notice(t){const n=$('notice');n.textContent=t;n.hidden=!t;}
+let confirmT; function armConfirm(k){S.confirm=k;clearTimeout(confirmT);confirmT=setTimeout(()=>{S.confirm=null;render();},4000);render();}
+
+/* ---------- eventos ---------- */
+document.querySelectorAll('nav.tabs [data-tab]').forEach(b=>b.addEventListener('click',()=>{
+  S.tab=b.dataset.tab;
+  document.querySelectorAll('nav.tabs [data-tab]').forEach(x=>x.setAttribute('aria-selected',x===b));
+  document.querySelectorAll('.tab').forEach(t=>t.hidden=t.id!=='tab-'+S.tab);
+  $('bar').hidden = S.tab!=='poner'; document.body.classList.toggle('has-bar',S.tab==='poner');
+  try{localStorage.setItem('multas-tab',S.tab);}catch(e){}
+  window.scrollTo(0,0);
+}));
+$('fecha').addEventListener('change',e=>{S.fecha=e.target.value||todayStr();render();});
+$('hoy').addEventListener('click',()=>{S.fecha=todayStr();render();});
+$('buscaJug').addEventListener('input',e=>{S.busca=e.target.value;renderPoner();});
+$('clearSel').addEventListener('click',()=>{S.sel.clear();renderPoner();});
+$('chips').addEventListener('click',e=>{const b=e.target.closest('[data-j]');if(!b)return;const id=b.dataset.j;S.sel.has(id)?S.sel.delete(id):S.sel.add(id);renderPoner();});
+$('types').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;S.tipoId=S.tipoId===b.dataset.t?null:b.dataset.t;S.cantidad=1;const tt=tipoById(S.tipoId);S.minutos=tt&&tt.modo==='minutos'?(Number(tt.umbral)||0):0;renderPoner();});
+$('extra').addEventListener('click',e=>{
+  const b=e.target.closest('[data-step]'); if(b){S.cantidad=Math.max(1,S.cantidad+Number(b.dataset.step));renderPoner();return;}
+  const m=e.target.closest('[data-mstep]'); if(m){S.minutos=Math.max(0,(S.minutos||0)+Number(m.dataset.mstep));renderPoner();}
+});
+$('extra').addEventListener('input',e=>{if(e.target.id==='minIn'){S.minutos=Math.max(0,parseInt(e.target.value)||0);updateSummary();}});
+
+$('poner').addEventListener('click',async()=>{
+  const t=tipoById(S.tipoId); if(!t||!S.sel.size||!S.db) return;
+  const imp=calcImporte(t,S.cantidad,S.minutos);
+  const ids=[...S.sel]; $('poner').disabled=true;
+  try{
+    for(const jid of ids){
+      await S.db.collection('multas').add({jugadorId:jid,jugadorNombre:jugNombre(jid)||'',tipoId:t.id,concepto:t.nombre,fecha:S.fecha,
+        cantidad:t.modo==='cantidad'?S.cantidad:1,minutos:t.modo==='minutos'?S.minutos:0,importe:imp,pagada:false,creado:Date.now()});
+    }
+    S.writeTested=true;
+    toast(ids.length===1?`${jugNombre(ids[0])}: ${eur(imp)}`:`${ids.length} multas de ${eur(imp)} puestas`);
+    S.sel.clear(); S.tipoId=null; S.cantidad=1; S.minutos=0; render();
+  }catch(e){fail(e);updateSummary();}
+});
+
+$('dayList').addEventListener('click',async e=>{const b=e.target.closest('[data-del]');if(!b)return;const id=b.dataset.del;
+  if(S.confirm!=='del:'+id){armConfirm('del:'+id);return;}
+  S.confirm=null; try{await S.db.doc('multas/'+id).delete();toast('Multa quitada');}catch(err){fail(err);} });
+
+$('fMes').addEventListener('change',e=>{S.fMes=e.target.value;renderRecuento();});
+$('fEstado').addEventListener('change',e=>{S.fEstado=e.target.value;renderRecuento();});
+$('players').addEventListener('click',async e=>{
+  const o=e.target.closest('[data-open]'); if(o){const id=o.dataset.open;S.open.has(id)?S.open.delete(id):S.open.add(id);renderRecuento();return;}
+  const p=e.target.closest('[data-pay]'); if(p){const m=S.multas.find(x=>x.id===p.dataset.pay);if(!m)return;try{await S.db.doc('multas/'+m.id).update({pagada:!m.pagada});}catch(err){fail(err);}return;}
+  const a=e.target.closest('[data-payall]'); if(a){const jid=a.dataset.payall;
+    if(S.confirm!=='pay:'+jid){armConfirm('pay:'+jid);return;}
+    S.confirm=null; const list=filtradas().filter(m=>m.jugadorId===jid&&!m.pagada);
+    try{for(const m of list) await S.db.doc('multas/'+m.id).update({pagada:true}); toast(`${list.length} multas marcadas como pagadas`);}catch(err){fail(err);}
+  }
+});
+$('copiar').addEventListener('click',()=>{
+  const ms=filtradas(); const tot=new Map();
+  ms.forEach(m=>{const n=jugNombre(m.jugadorId)||m.jugadorNombre||'?';tot.set(n,(tot.get(n)||0)+m.importe);});
+  const lines=[...tot.entries()].filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([n,v])=>`• ${n}: ${eur(v)}`);
+  const head=`*Multas Regi B* · ${S.fMes==='todos'?'acumulado':fmtMes(S.fMes)}${S.fEstado==='pend'?' (pendiente)':S.fEstado==='pag'?' (pagado)':''}`;
+  const txt=[head,'',...(lines.length?lines:['Nadie debe nada 👏']),'',`Total: ${eur(ms.reduce((a,m)=>a+m.importe,0))}`].join('\n');
+  const done=()=>toast('Resumen copiado');
+  const fallback=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){toast('No se pudo copiar');}ta.remove();};
+  try{navigator.clipboard.writeText(txt).then(done,fallback);}catch(e){fallback();}
+});
+
+/* jugadores */
+$('formJug').addEventListener('submit',async e=>{e.preventDefault();const nombre=$('jNombre').value.trim();if(!nombre||!S.db)return;
+  try{ if(S.editJug){await S.db.doc('jugadores/'+S.editJug).update({nombre});toast('Jugador actualizado');}
+       else{await S.db.collection('jugadores').add({nombre,creado:Date.now()});toast(nombre+' añadido');}
+       S.writeTested=true; resetJug(); }catch(err){fail(err);} });
+function resetJug(){S.editJug=null;$('jNombre').value='';$('jSubmit').textContent='Añadir jugador';$('jCancel').hidden=true;}
+$('jCancel').addEventListener('click',resetJug);
+$('mngJug').addEventListener('click',async e=>{
+  const ed=e.target.closest('[data-ej]'); if(ed){const j=S.jugadores.find(x=>x.id===ed.dataset.ej);S.editJug=j.id;$('jNombre').value=j.nombre;$('jSubmit').textContent='Guardar nombre';$('jCancel').hidden=false;$('jNombre').focus();$('formJug').scrollIntoView({block:'center'});return;}
+  const d=e.target.closest('[data-dj]'); if(d){const id=d.dataset.dj; if(S.confirm!=='dj:'+id){armConfirm('dj:'+id);return;}
+    S.confirm=null; try{await S.db.doc('jugadores/'+id).delete();S.sel.delete(id);toast('Jugador borrado (sus multas se conservan)');}catch(err){fail(err);} }
+});
+
+/* tipos */
+function syncModo(){const m=$('tModo').value;$('tMinBox').hidden=m!=='minutos';$('tUniBox').hidden=m!=='cantidad';}
+$('tModo').addEventListener('change',syncModo);
+$('formTipo').addEventListener('submit',async e=>{e.preventDefault();if(!S.db)return;
+  const d={nombre:$('tNombre').value.trim(),importe:Number($('tImporte').value)||0,modo:$('tModo').value,nota:$('tNota').value.trim(),
+    umbral:Number($('tUmbral').value)||0,extra:Number($('tExtra').value)||0,unidad:$('tUnidad').value.trim()};
+  if(!d.nombre)return;
+  try{ if(S.editTipo){await S.db.doc('tipos/'+S.editTipo).update(d);toast('Multa actualizada');}
+       else{d.orden=Math.max(0,...S.tipos.map(t=>t.orden||0))+1;await S.db.collection('tipos').add(d);toast('Multa creada');}
+       S.writeTested=true; resetTipo(); }catch(err){fail(err);} });
+function resetTipo(){S.editTipo=null;$('formTipo').reset();$('tUmbral').value=10;$('tExtra').value=1;syncModo();$('tSubmit').textContent='Añadir multa';$('tCancel').hidden=true;}
+$('tCancel').addEventListener('click',resetTipo);
+$('mngTipo').addEventListener('click',async e=>{
+  const ed=e.target.closest('[data-et]'); if(ed){const t=tipoById(ed.dataset.et);S.editTipo=t.id;
+    $('tNombre').value=t.nombre;$('tImporte').value=t.importe;$('tModo').value=t.modo||'fijo';$('tNota').value=t.nota||'';$('tUmbral').value=t.umbral??10;$('tExtra').value=t.extra??1;$('tUnidad').value=t.unidad||'';
+    syncModo();$('tSubmit').textContent='Guardar cambios';$('tCancel').hidden=false;$('formTipo').scrollIntoView({block:'center'});return;}
+  const d=e.target.closest('[data-dt]'); if(d){const id=d.dataset.dt; if(S.confirm!=='dt:'+id){armConfirm('dt:'+id);return;}
+    S.confirm=null; try{await S.db.doc('tipos/'+id).delete();if(S.tipoId===id)S.tipoId=null;toast('Tipo de multa borrado');}catch(err){fail(err);} }
+});
+
+/* ---------- arranque ---------- */
+document.body.classList.add('has-bar');
+try{const t=localStorage.getItem('multas-tab');if(t&&t!=='poner'){const b=document.querySelector(`nav.tabs [data-tab="${t}"]`);b&&b.click();}}catch(e){}
+render();
+
+/* ---------- almacenamiento local (este navegador) ---------- */
+const LS_KEY='multas-regi-b-v1';
+function seed(){
+  const nombres=['Sergio','Monje','Igorcio','David López','Joni','Eneko Torres','Joseba','Delafu','Iker Zabala','Markel Arroita','Eritz','Aitor Martín','Moha','Moussa','Endika','Jon Orozco','Patricio','Serna','Beñat Gallastegui','Oierju','Jafer','Pasi','Richi'];
+  const T=[
+    ['Llegar tarde al partido',4,'minutos',{umbral:10,extra:2}],
+    ['Llegar tarde al entrenamiento',2,'minutos',{umbral:10,extra:1}],
+    ['No avisar que vienes al entreno / no apuntarte a la encuesta',10],
+    ['Apuntarte a la encuesta y no venir',20],
+    ['No avisar que vienes al partido',50],
+    ['Prenda olvidada',2,'cantidad',{unidad:'prenda',nota:'Medias, botas o espinilleras cuentan doble (pon 2)'}],
+    ['No estar en el vestuario a la hora de la charla',2],
+    ['Sonar el móvil en la charla',2],
+    ['Hablar en la charla',2],
+    ['Amarilla por protestar o desplazar el balón',5],
+    ['Expulsión por segunda amarilla (protestar o desplazar el balón)',15],
+    ['Roja directa por protestar',20],
+    ['No venir a ver los partidos de casa sin justificar',5],
+    ['Disparar entre ejercicios y que no vaya a puerta',2],
+    ['Falta de respeto a compañero o cuerpo técnico',15],
+    ['Tener fisio y no ir',5],
+    ['Fallar penalti (viernes)',2,'cantidad',{unidad:'penalti',nota:'El portero debe parar al menos 3'}],
+    ['Irse el viernes sin tirar penalti',2],
+    ['Grupo de material: no estar 15 min antes',2],
+    ['Grupo de material: no sacar o no guardar material',2,'cantidad',{unidad:'pieza',nota:'Por cada pica, botellín, peto…'}],
+    ['Grupo de material: no hacer el lunch de fin de mes',10,'fijo',{nota:'10 € a cada persona del grupo'}],
+    ['Pagar las multas tarde',3,'cantidad',{unidad:'semana'}],
+    ['Partido perdido',1],
+    ['Encajar gol a balón parado',1,'cantidad',{unidad:'gol'}],
+    ['No acudir a comida o cena oficial sin justificar',5]];
+  const st={jugadores:{},tipos:{},multas:{}};
+  nombres.forEach((n,i)=>st.jugadores['j'+pad(i+1)]={nombre:n,creado:i+1});
+  T.forEach(([nombre,importe,modo,o],i)=>st.tipos['t'+pad(i+1)]={nombre,importe,modo:modo||'fijo',orden:i+1,umbral:0,extra:0,unidad:'',nota:'',...(o||{})});
+  return st;
+}
+let store=null;
+try{const r=localStorage.getItem(LS_KEY); if(r) store=JSON.parse(r);}catch(e){}
+let canPersist=true;
+if(!store||!store.jugadores){store=seed();}
+function save(){try{localStorage.setItem(LS_KEY,JSON.stringify(store));}catch(e){canPersist=false;notice('Este navegador no deja guardar datos (modo privado o almacenamiento lleno). Lo que apuntes se perderá al cerrar.');}}
+save();
+const subs={};
+const snap=c=>({docs:Object.entries(store[c]||{}).map(([id,d])=>({id,data:()=>d}))});
+const emit=c=>(subs[c]||[]).forEach(fn=>fn(snap(c)));
+const emitAll=()=>['jugadores','tipos','multas'].forEach(emit);
+const newId=c=>c[0]+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const localDb={
+  collection(c){return{
+    add:async d=>{const id=newId(c);(store[c]=store[c]||{})[id]=JSON.parse(JSON.stringify(d));save();emit(c);return{id};},
+    onSnapshot(fn){(subs[c]=subs[c]||[]).push(fn);fn(snap(c));return()=>{};}
+  };},
+  doc(path){const [c,id]=path.split('/');return{
+    update:async d=>{if(!store[c]||!store[c][id])throw{code:'not_found'};Object.assign(store[c][id],d);save();emit(c);},
+    delete:async()=>{if(store[c])delete store[c][id];save();emit(c);}
+  };}
+};
+// si se abre en otra pestaña del mismo navegador, mantener sincronizado
+window.addEventListener('storage',e=>{if(e.key!==LS_KEY||!e.newValue)return;try{store=JSON.parse(e.newValue);emitAll();}catch(_){}});
+
+S.db=localDb; S.writeTested=true;
+localDb.collection('jugadores').onSnapshot(s=>{S.jugadores=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{numeric:true}));S.loaded.j=true;
+  [...S.sel].forEach(id=>{if(!S.jugadores.some(j=>j.id===id))S.sel.delete(id);});render();});
+localDb.collection('tipos').onSnapshot(s=>{S.tipos=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.orden||0)-(b.orden||0));S.loaded.t=true;render();});
+localDb.collection('multas').onSnapshot(s=>{S.multas=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded.m=true;render();});
+
+/* ---------- copia de seguridad ---------- */
+$('bExport').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify({app:'multas-regi-b',version:1,fecha:new Date().toISOString(),datos:store},null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='multas-regi-b-'+todayStr()+'.json';document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);toast('Copia descargada');
+});
+$('bImport').addEventListener('change',async e=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f) return;
+  try{const j=JSON.parse(await f.text()); const d=j.datos||j;
+    if(!d||typeof d.jugadores!=='object'||typeof d.tipos!=='object'||typeof d.multas!=='object') throw 0;
+    const n=Object.keys(d.multas).length;
+    if(!window.confirm('Se van a reemplazar los datos de este móvil por la copia ('+n+' multas, '+Object.keys(d.jugadores).length+' jugadores). ¿Continuar?')) return;
+    store={jugadores:d.jugadores,tipos:d.tipos,multas:d.multas};save();emitAll();toast('Copia cargada: '+Object.keys(d.multas).length+' multas');
+  }catch(err){toast('Ese archivo no es una copia válida de la app');}
+});
+</script>
+
+</body>
+</html>
