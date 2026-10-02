@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1f5a3a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Multas">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
 <title>Multas Iurretako Regi B</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -178,6 +184,31 @@ nav.tabs .in button[aria-selected="true"]{color:var(--pitch);box-shadow:inset 0 
 nav.tabs .in button .lk{display:none}
 body.locked nav.tabs .in button[data-lock] .lk{display:inline}
 .lockbtn{background:transparent;color:var(--pitch-ink);border:1px solid currentColor;opacity:.85;font-size:12px;padding:4px 8px;margin-top:6px}
+
+/* ---- móvil ---- */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+button,label.btn-like,input,select{touch-action:manipulation}
+main{padding-block-end:calc(var(--nav-h,70px) + 24px)}
+body.has-bar main{padding-block-end:calc(var(--nav-h,200px) + 24px)}
+.toast,body.has-bar .toast{top:calc(12px + env(safe-area-inset-top,0px));bottom:auto}
+.form .grid2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.form input,.form select{width:100%}
+.chips{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px}
+.chip{padding:9px 8px;font-size:15px}
+.bar .extra{flex-wrap:nowrap;padding:8px 10px}
+.bar .extra>span{min-width:0;font-size:15px;line-height:1.25}
+.bar .extra small{font-size:13px}
+nav.tabs .in button{white-space:nowrap}
+.mrow{gap:6px}
+@media (max-width:380px){
+  .top h1{font-size:22px}
+  .top .bote b{font-size:26px}
+  .bar .btn-main{min-width:0;padding:13px 14px;font-size:16px}
+  .bar-sum b{font-size:22px}
+  .tot-card div b{font-size:20px}
+  .stepper button{width:38px;height:38px}
+  .stepper input{width:54px}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -358,7 +389,7 @@ body.locked nav.tabs .in button[data-lock] .lk{display:inline}
   <div class="in" role="tablist">
     <button role="tab" data-tab="poner" data-lock aria-selected="true" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="2" fill="currentColor" fill-opacity=".15"/><path d="M12 8v5M12 16.5v.5" stroke-linecap="round"/></svg>
-      <span><span class="lk">🔒 </span>Poner multa</span>
+      <span><span class="lk">🔒 </span>Poner</span>
     </button>
     <button role="tab" data-tab="multas" aria-selected="false" type="button" style="order:1">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h12M8 12h12M8 18h12" stroke-linecap="round"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>
@@ -450,8 +481,8 @@ function renderPoner(){
   // extra
   const t = tipoById(S.tipoId);
   let ex='';
-  if(t && t.modo==='minutos') ex = `<div class="extra"><span>Minutos tarde<br><small style="color:var(--muted)">${eur(t.importe)} hasta el min ${t.umbral}, luego +${eur(t.extra)}/min</small><br><small id="exCalc" style="font-weight:600"></small></span><div class="stepper"><button type="button" data-mstep="-1" aria-label="Un minuto menos">−</button><input id="minIn" type="number" min="0" step="1" inputmode="numeric" value="${S.minutos}" aria-label="Minutos de retraso"><button type="button" data-mstep="1" aria-label="Un minuto más">+</button></div></div>`;
-  if(t && t.modo==='cantidad') ex = `<div class="extra"><span>Cantidad<br><small style="color:var(--muted)">${eur(t.importe)} por ${esc(t.unidad||'unidad')}</small><br><small id="exCalc" style="font-weight:600"></small></span><div class="stepper"><button type="button" data-step="-1" aria-label="Menos">−</button><b class="num" id="cantOut">${S.cantidad}</b><button type="button" data-step="1" aria-label="Más">+</button></div></div>`;
+  if(t && t.modo==='minutos') ex = `<div class="extra"><span><b>Minutos tarde</b><br><small id="exCalc" style="font-weight:600"></small></span><div class="stepper"><button type="button" data-mstep="-1" aria-label="Un minuto menos">−</button><input id="minIn" type="number" min="0" step="1" inputmode="numeric" value="${S.minutos}" aria-label="Minutos de retraso"><button type="button" data-mstep="1" aria-label="Un minuto más">+</button></div></div>`;
+  if(t && t.modo==='cantidad') ex = `<div class="extra"><span><b>Cantidad</b> <small style="color:var(--muted)">(${eur(t.importe)}/${esc(t.unidad||'unidad')})</small><br><small id="exCalc" style="font-weight:600"></small></span><div class="stepper"><button type="button" data-step="-1" aria-label="Menos">−</button><b class="num" id="cantOut">${S.cantidad}</b><button type="button" data-step="1" aria-label="Más">+</button></div></div>`;
   const exEl=$('extra'); const k=t?t.id+t.modo:'';
   if(exEl.dataset.k!==k){exEl.innerHTML=ex;exEl.dataset.k=k;}
   else if(t && t.modo==='cantidad'){$('cantOut').textContent=S.cantidad;}
@@ -475,7 +506,7 @@ function updateSummary(){
   const ec=document.getElementById('exCalc');
   if(ec&&t){
     if(t.modo==='minutos'){const mn=S.minutos||0, ex=mn-(Number(t.umbral)||0);
-      ec.textContent = ex>0 ? `${mn} min → ${eur(t.importe)} + ${ex} × ${eur(t.extra)} = ${eur(imp)}` : `${mn} min → sin recargo = ${eur(imp)}`;}
+      ec.textContent = ex>0 ? `${eur(t.importe)} + ${ex} min × ${eur(t.extra)}` : `Sin recargo (hasta el min ${t.umbral})`;}
     else if(t.modo==='cantidad'){ec.textContent=`${S.cantidad} × ${eur(t.importe)} = ${eur(imp)}`;}
   }
   $('sumAmt').textContent = eur(imp*Math.max(n,1));
@@ -774,6 +805,10 @@ $('mngTipo').addEventListener('click',async e=>{
 });
 
 /* ---------- arranque ---------- */
+const navEl=document.querySelector('nav.tabs');
+const syncNavH=()=>document.documentElement.style.setProperty('--nav-h',navEl.offsetHeight+'px');
+try{new ResizeObserver(syncNavH).observe(navEl);}catch(e){window.addEventListener('resize',syncNavH);}
+syncNavH();
 let startTab='poner'; try{startTab=localStorage.getItem('multas-tab')||'poner';}catch(e){}
 if(!document.querySelector(`nav.tabs [data-tab="${startTab}"]`)) startTab='poner';
 setUnlocked(false);
