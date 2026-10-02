@@ -338,7 +338,7 @@ body.locked nav.tabs .in button[data-lock] .lk{display:inline}
 
     <section class="block" style="margin-top:28px">
       <h2>Copia de seguridad</h2>
-      <p style="margin:0;color:var(--muted);font-size:14px">Los datos se guardan solo en este navegador. Descarga una copia de vez en cuando; si cambias de móvil o se borra el navegador, la recuperas con «Cargar copia».</p>
+      <p style="margin:0;color:var(--muted);font-size:14px">Los datos se guardan en internet (Firebase) y todo el equipo ve lo mismo. Descarga una copia de vez en cuando por si acaso. «Cargar copia» reemplaza todos los datos de la app por los de la copia.</p>
       <div class="row">
         <button type="button" id="bExport" style="flex:1">Descargar copia</button>
         <label class="btn-like" style="flex:1">Cargar copia<input type="file" id="bImport" accept=".json,application/json" hidden></label>
@@ -388,6 +388,9 @@ body.locked nav.tabs .in button[data-lock] .lk{display:inline}
   </form>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const eur = n => (Math.round(n*100)/100).toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:2})+' €';
@@ -635,18 +638,17 @@ function renderAnadir(){
 
 /* ---------- toast ---------- */
 let tt; function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2400);}
-function fail(e){ if(e&&e.code==='invalid_argument'&&!S.writeTested){S.canWrite=false;notice('Tienes acceso de solo lectura: puedes ver las multas pero no cambiarlas.');render();return;}
+function fail(e){ if(e&&e.code==='permission-denied'){toast('No tienes permiso para cambiar datos. Desbloquea con la contraseña.');return;}
   toast(e&&e.code==='quota_exceeded'?'No queda espacio para más registros.':'No se pudo guardar. Inténtalo de nuevo.'); }
 function notice(t){const n=$('notice');n.textContent=t;n.hidden=!t;}
 let confirmT; function armConfirm(k){S.confirm=k;clearTimeout(confirmT);confirmT=setTimeout(()=>{S.confirm=null;render();},4000);render();}
 
 /* ---------- eventos ---------- */
 /* ---------- bloqueo con contraseña (solo Sergio pone multas) ---------- */
-const LOCK_PASS='Borja99', LOCK_KEY='multas-desbloqueado', LOCKED_TABS=['poner','anadir'];
+const LOCKED_TABS=['poner','anadir'];
 let pendingTab=null;
 function setUnlocked(v){
   S.unlocked=v; S.canWrite=v;
-  try{v?localStorage.setItem(LOCK_KEY,'1'):localStorage.removeItem(LOCK_KEY);}catch(e){}
   document.body.classList.toggle('locked',!v);
   $('lockBtn').hidden=!v;
   if(!v && LOCKED_TABS.includes(S.tab)) showTab('recuento');
@@ -656,14 +658,24 @@ function askPass(tab){
   pendingTab=tab; $('lockPass').value=''; $('lockErr').hidden=true; $('lockDlg').hidden=false;
   setTimeout(()=>$('lockPass').focus(),30);
 }
-$('lockForm').addEventListener('submit',e=>{
+$('lockForm').addEventListener('submit',async e=>{
   e.preventDefault();
-  if($('lockPass').value===LOCK_PASS){$('lockDlg').hidden=true;setUnlocked(true);if(pendingTab)showTab(pendingTab);pendingTab=null;toast('Desbloqueado');}
-  else{$('lockErr').hidden=false;$('lockPass').select();}
+  const btn=$('lockForm').querySelector('[type=submit]'); btn.disabled=true; $('lockErr').hidden=true;
+  try{
+    await auth.signInWithEmailAndPassword(SERGIO_EMAIL,$('lockPass').value);
+    $('lockDlg').hidden=true; setUnlocked(true); if(pendingTab)showTab(pendingTab); pendingTab=null; toast('Desbloqueado'); maybeSeed();
+  }catch(err){
+    const c=err&&err.code||'';
+    $('lockErr').textContent = c==='auth/too-many-requests'?'Demasiados intentos. Espera un poco.'
+      : c==='auth/network-request-failed'?'Sin conexión. Inténtalo de nuevo.'
+      : /wrong-password|invalid-credential|invalid-login|user-not-found|invalid-email/.test(c)?'Contraseña incorrecta'
+      : 'No se pudo entrar ('+c+')';
+    $('lockErr').hidden=false; $('lockPass').select();
+  }finally{btn.disabled=false;}
 });
 $('lockCancel').addEventListener('click',()=>{$('lockDlg').hidden=true;pendingTab=null;});
 $('lockDlg').addEventListener('click',e=>{if(e.target.id==='lockDlg'){$('lockDlg').hidden=true;pendingTab=null;}});
-$('lockBtn').addEventListener('click',()=>{setUnlocked(false);toast('Bloqueado');});
+$('lockBtn').addEventListener('click',async()=>{try{await auth.signOut();}catch(e){} setUnlocked(false);toast('Bloqueado');});
 
 function showTab(tab){
   if(LOCKED_TABS.includes(tab) && !S.unlocked){askPass(tab);return;}
@@ -762,15 +774,36 @@ $('mngTipo').addEventListener('click',async e=>{
 });
 
 /* ---------- arranque ---------- */
-let wasUnlocked=false; try{wasUnlocked=localStorage.getItem(LOCK_KEY)==='1';}catch(e){}
-setUnlocked(wasUnlocked);
 let startTab='poner'; try{startTab=localStorage.getItem('multas-tab')||'poner';}catch(e){}
 if(!document.querySelector(`nav.tabs [data-tab="${startTab}"]`)) startTab='poner';
-if(LOCKED_TABS.includes(startTab) && !S.unlocked) startTab='recuento';
-showTab(startTab);
+setUnlocked(false);
+showTab(LOCKED_TABS.includes(startTab)?'recuento':startTab);
 
-/* ---------- almacenamiento local (este navegador) ---------- */
-const LS_KEY='multas-regi-b-v1';
+/* ---------- Firebase (datos compartidos por todo el equipo) ---------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyCO3ClkWyuB1uDNrVGv_8beo9USW4JDU_s",
+  authDomain: "multas-reg-b.firebaseapp.com",
+  projectId: "multas-reg-b",
+  storageBucket: "multas-reg-b.firebasestorage.app",
+  messagingSenderId: "927641138270",
+  appId: "1:927641138270:web:84d9608e6dee553748f0cf"
+};
+// Correo de la cuenta de Sergio creada en Firebase → Authentication (la contraseña se pide al desbloquear)
+const SERGIO_EMAIL = 'sergio@regib.com';
+
+if(typeof firebase==='undefined'){notice('No se pudo cargar la app. Revisa la conexión a internet y recarga la página.');throw new Error('Firebase no cargado');}
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const fdb = firebase.firestore();
+S.db = fdb; S.writeTested = true;
+
+let authKnown=false;
+auth.onAuthStateChanged(u=>{
+  setUnlocked(!!u);
+  if(!authKnown){authKnown=true; if(u && LOCKED_TABS.includes(startTab)) showTab(startTab);}
+  maybeSeed();
+});
+
 function seed(){
   const nombres=['Sergio','Monje','Igorcio','David López','Joni','Eneko Torres','Joseba','Delafu','Iker Zabala','Markel Arroita','Eritz','Aitor Martín','Moha','Moussa','Endika','Jon Orozco','Patricio','Serna','Beñat Gallastegui','Oierju','Jafer','Pasi','Richi'];
   const T=[
@@ -804,38 +837,29 @@ function seed(){
   T.forEach(([nombre,importe,modo,o],i)=>st.tipos['t'+pad(i+1)]={nombre,importe,modo:modo||'fijo',orden:i+1,umbral:0,extra:0,unidad:'',nota:'',...(o||{})});
   return st;
 }
-let store=null;
-try{const r=localStorage.getItem(LS_KEY); if(r) store=JSON.parse(r);}catch(e){}
-let canPersist=true;
-if(!store||!store.jugadores){store=seed();}
-function save(){try{localStorage.setItem(LS_KEY,JSON.stringify(store));}catch(e){canPersist=false;notice('Este navegador no deja guardar datos (modo privado o almacenamiento lleno). Lo que apuntes se perderá al cerrar.');}}
-save();
-const subs={};
-const snap=c=>({docs:Object.entries(store[c]||{}).map(([id,d])=>({id,data:()=>d}))});
-const emit=c=>(subs[c]||[]).forEach(fn=>fn(snap(c)));
-const emitAll=()=>['jugadores','tipos','multas'].forEach(emit);
-const newId=c=>c[0]+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-const localDb={
-  collection(c){return{
-    add:async d=>{const id=newId(c);(store[c]=store[c]||{})[id]=JSON.parse(JSON.stringify(d));save();emit(c);return{id};},
-    onSnapshot(fn){(subs[c]=subs[c]||[]).push(fn);fn(snap(c));return()=>{};}
-  };},
-  doc(path){const [c,id]=path.split('/');return{
-    update:async d=>{if(!store[c]||!store[c][id])throw{code:'not_found'};Object.assign(store[c][id],d);save();emit(c);},
-    delete:async()=>{if(store[c])delete store[c][id];save();emit(c);}
-  };}
-};
-// si se abre en otra pestaña del mismo navegador, mantener sincronizado
-window.addEventListener('storage',e=>{if(e.key!==LS_KEY||!e.newValue)return;try{store=JSON.parse(e.newValue);emitAll();}catch(_){}});
+// Si la base de datos está vacía y Sergio ha entrado, cargar la plantilla inicial de jugadores y multas
+let seeding=false;
+async function maybeSeed(){
+  if(seeding||!S.unlocked||!S.loaded.j||!S.loaded.t||S.jugadores.length||S.tipos.length) return;
+  seeding=true;
+  try{const st=seed(); const batch=fdb.batch();
+    ['jugadores','tipos'].forEach(c=>Object.entries(st[c]).forEach(([id,d])=>batch.set(fdb.doc(c+'/'+id),d)));
+    await batch.commit(); toast('Plantilla inicial cargada');
+  }catch(e){fail(e);}
+}
 
-S.db=localDb; S.writeTested=true; S.canWrite=S.unlocked;
-localDb.collection('jugadores').onSnapshot(s=>{S.jugadores=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{numeric:true}));S.loaded.j=true;
-  [...S.sel].forEach(id=>{if(!S.jugadores.some(j=>j.id===id))S.sel.delete(id);});render();});
-localDb.collection('tipos').onSnapshot(s=>{S.tipos=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.orden||0)-(b.orden||0));S.loaded.t=true;render();});
-localDb.collection('multas').onSnapshot(s=>{S.multas=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded.m=true;render();});
+const snapErr=e=>notice(e&&e.code==='permission-denied'
+  ? 'No se pueden leer los datos: revisa las reglas de Firestore.'
+  : 'No se pudo conectar con la base de datos. Revisa la conexión a internet.');
+fdb.collection('jugadores').onSnapshot(s=>{S.jugadores=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es',{numeric:true}));S.loaded.j=true;
+  [...S.sel].forEach(id=>{if(!S.jugadores.some(j=>j.id===id))S.sel.delete(id);});render();maybeSeed();},snapErr);
+fdb.collection('tipos').onSnapshot(s=>{S.tipos=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.orden||0)-(b.orden||0));S.loaded.t=true;render();maybeSeed();},snapErr);
+fdb.collection('multas').onSnapshot(s=>{S.multas=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded.m=true;render();},snapErr);
 
 /* ---------- copia de seguridad ---------- */
 $('bExport').addEventListener('click',()=>{
+  const toObj=arr=>Object.fromEntries(arr.map(({id,...d})=>[id,d]));
+  const store={jugadores:toObj(S.jugadores),tipos:toObj(S.tipos),multas:toObj(S.multas)};
   const blob=new Blob([JSON.stringify({app:'multas-regi-b',version:1,fecha:new Date().toISOString(),datos:store},null,1)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='multas-regi-b-'+todayStr()+'.json';document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);toast('Copia descargada');
@@ -845,8 +869,13 @@ $('bImport').addEventListener('change',async e=>{
   try{const j=JSON.parse(await f.text()); const d=j.datos||j;
     if(!d||typeof d.jugadores!=='object'||typeof d.tipos!=='object'||typeof d.multas!=='object') throw 0;
     const n=Object.keys(d.multas).length;
-    if(!window.confirm('Se van a reemplazar los datos de este móvil por la copia ('+n+' multas, '+Object.keys(d.jugadores).length+' jugadores). ¿Continuar?')) return;
-    store={jugadores:d.jugadores,tipos:d.tipos,multas:d.multas};save();emitAll();toast('Copia cargada: '+Object.keys(d.multas).length+' multas');
+    if(!S.unlocked){toast('Desbloquea primero con la contraseña');return;}
+    if(!window.confirm('Se van a reemplazar TODOS los datos de la app (los que ve todo el equipo) por la copia ('+n+' multas, '+Object.keys(d.jugadores).length+' jugadores). ¿Continuar?')) return;
+    const ops=[];
+    [['jugadores',S.jugadores],['tipos',S.tipos],['multas',S.multas]].forEach(([c,arr])=>arr.forEach(x=>{if(!d[c][x.id])ops.push(b=>b.delete(fdb.doc(c+'/'+x.id)));}));
+    ['jugadores','tipos','multas'].forEach(c=>Object.entries(d[c]).forEach(([id,v])=>ops.push(b=>b.set(fdb.doc(c+'/'+id),v))));
+    try{for(let i=0;i<ops.length;i+=400){const b=fdb.batch();ops.slice(i,i+400).forEach(f=>f(b));await b.commit();}
+      toast('Copia cargada: '+n+' multas');}catch(err){fail(err);}
   }catch(err){toast('Ese archivo no es una copia válida de la app');}
 });
 </script>
