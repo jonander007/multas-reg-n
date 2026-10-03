@@ -223,6 +223,31 @@ nav.tabs .in button{white-space:nowrap;min-width:0;overflow:hidden}
   .stepper button{width:38px;height:38px}
   .stepper input{width:54px}
 }
+/* ---- cobro mensual ---- */
+.aviso-mes{background:color-mix(in srgb,var(--card) 28%,var(--surface));border:1px solid color-mix(in srgb,var(--card) 70%,var(--line));border-radius:var(--r);padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.aviso-mes b{display:block;font:700 18px/1.1 var(--display);text-transform:uppercase;letter-spacing:.03em}
+.aviso-mes span{font-size:14px;color:var(--muted)}
+.cestado{font-size:13px;color:var(--muted);text-align:center;margin-top:-4px}
+.cestado.ok{color:var(--ok);font-weight:600}
+.progress{height:10px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--ok);border-radius:999px;transition:width .3s}
+.crows{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.crow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+.crow:last-child{border-bottom:0}
+.crow .n{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.crow .n small{display:block;font-weight:400;font-size:13px;color:var(--muted)}
+.crow .t{font:800 20px/1 var(--display);text-align:right}
+.crow .s{font-size:14px;font-weight:600}
+.crow.debe .s{color:var(--danger)}
+.crow.part .s{color:#b07a00}
+.crow.ok .s{color:var(--ok)}
+.crow.ok .t{color:var(--muted)}
+.crow .b{justify-self:end}
+.crow .b button{padding:6px 12px;font-size:14px}
+.crow .b .pay{background:var(--ok);color:#fff;border-color:transparent;font-weight:600}
+.cbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cbtns .btn-main{grid-column:1/-1}
+.btn-wa{background:#25d366;color:#fff;border-color:transparent;font-weight:600}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -241,6 +266,7 @@ nav.tabs .in button{white-space:nowrap;min-width:0;overflow:hidden}
 
 <main>
   <div id="notice" class="notice" hidden></div>
+  <div id="avisoMes" class="aviso-mes" hidden></div>
 
   <!-- PONER MULTA -->
   <div id="tab-poner" class="tab">
@@ -275,7 +301,28 @@ nav.tabs .in button{white-space:nowrap;min-width:0;overflow:hidden}
 
   <!-- RECUENTO -->
   <div id="tab-recuento" class="tab" hidden>
-    <section class="block">
+    <section class="block" id="cobro">
+      <div class="row between"><h2>Cobro mensual</h2></div>
+      <div class="weeknav">
+        <button type="button" id="cPrev" aria-label="Mes anterior">‹</button>
+        <div><b id="cMesLbl"></b><span id="cMesSub"></span></div>
+        <button type="button" id="cNext" aria-label="Mes siguiente">›</button>
+      </div>
+      <div class="tot-card">
+        <div><b class="num" id="cTotal">0 €</b><span>Multas</span></div>
+        <div><b class="num" id="cPagado">0 €</b><span>Pagado</span></div>
+        <div><b class="num" id="cDebe">0 €</b><span>Falta</span></div>
+      </div>
+      <div class="progress" aria-hidden="true"><i id="cBar" style="width:0"></i></div>
+      <div class="cestado" id="cEstado"></div>
+      <div class="crows" id="cRows"></div>
+      <div class="cbtns">
+        <button type="button" class="btn-main" id="cMsg">📣 Mensaje de multas del mes</button>
+        <button type="button" id="cEstadoMsg">Estado de pagos</button>
+        <button type="button" id="cFalta">Solo los que deben</button>
+      </div>
+    </section>
+    <section class="block" style="margin-top:28px">
       <div class="row between"><h2>Resumen</h2></div>
       <div class="seg" role="group" aria-label="Tipo de resumen">
         <button type="button" data-rmodo="sem" aria-pressed="true">Semanal</button>
@@ -420,6 +467,17 @@ nav.tabs .in button{white-space:nowrap;min-width:0;overflow:hidden}
   </div>
 </nav>
 <div class="toast" id="toast" hidden></div>
+<div class="lockdlg" id="shareDlg" hidden role="dialog" aria-modal="true" aria-labelledby="shareTitle">
+  <form id="shareForm" onsubmit="return false">
+    <h2 id="shareTitle">Mensaje</h2>
+    <textarea id="shareTxt" rows="12" readonly style="width:100%;font:14px/1.4 var(--body);border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--surface-2);color:var(--fg);resize:vertical"></textarea>
+    <a class="btn-main btn-wa" id="shareWa" target="_blank" rel="noopener" style="text-align:center;text-decoration:none;border-radius:8px;padding:14px">Enviar por WhatsApp</a>
+    <div class="row2">
+      <button type="button" id="shareClose">Cerrar</button>
+      <button type="button" id="shareCopy">Copiar</button>
+    </div>
+  </form>
+</div>
 <div class="lockdlg" id="lockDlg" hidden role="dialog" aria-modal="true" aria-labelledby="lockTitle">
   <form id="lockForm" autocomplete="off">
     <h2 id="lockTitle">Zona bloqueada</h2>
@@ -471,7 +529,7 @@ function detalleTxt(m){
 function render(){
   const pend = S.multas.filter(m=>!m.pagada).reduce((a,m)=>a+(Number(m.importe)||0),0);
   $('bote').textContent = eur(pend);
-  renderPoner(); renderResumen(); renderRecuento(); renderMultas(); renderAnadir();
+  renderPoner(); renderResumen(); renderCobro(); renderRecuento(); renderMultas(); renderAnadir();
 }
 
 function renderPoner(){
@@ -652,7 +710,7 @@ function renderResumen(){
   $('rCopiar').disabled=!R.ms.length;
 }
 function copyText(txt){
-  const done=()=>toast('Resumen copiado');
+  const done=()=>toast('Copiado');
   const fallback=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){toast('No se pudo copiar');}ta.remove();};
   try{navigator.clipboard.writeText(txt).then(done,fallback);}catch(e){fallback();}
 }
@@ -780,7 +838,7 @@ $('copiar').addEventListener('click',()=>{
   const lines=[...tot.entries()].filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([n,v])=>`• ${n}: ${eur(v)}`);
   const head=`*Multas Regi B* · ${S.fMes==='todos'?'acumulado':fmtMes(S.fMes)}${S.fEstado==='pend'?' (pendiente)':S.fEstado==='pag'?' (pagado)':''}`;
   const txt=[head,'',...(lines.length?lines:['Nadie debe nada 👏']),'',`Total: ${eur(ms.reduce((a,m)=>a+m.importe,0))}`].join('\n');
-  const done=()=>toast('Resumen copiado');
+  const done=()=>toast('Copiado');
   const fallback=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){toast('No se pudo copiar');}ta.remove();};
   try{navigator.clipboard.writeText(txt).then(done,fallback);}catch(e){fallback();}
 });
@@ -816,6 +874,103 @@ $('mngTipo').addEventListener('click',async e=>{
     syncModo();$('tSubmit').textContent='Guardar cambios';$('tCancel').hidden=false;$('formTipo').scrollIntoView({block:'center'});return;}
   const d=e.target.closest('[data-dt]'); if(d){const id=d.dataset.dt; if(S.confirm!=='dt:'+id){armConfirm('dt:'+id);return;}
     S.confirm=null; try{await S.db.doc('tipos/'+id).delete();if(S.tipoId===id)S.tipoId=null;toast('Tipo de multa borrado');}catch(err){fail(err);} }
+});
+
+/* ---------- cobro mensual ---------- */
+// Las multas de un mes se anuncian el primer lunes del mes siguiente.
+const mesKey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1);
+const mesAdd=(k,n)=>{const [y,m]=k.split('-').map(Number);return mesKey(new Date(y,m-1+n,1));};
+const primerLunes=k=>{const [y,m]=k.split('-').map(Number);const d=new Date(y,m-1,1);d.setDate(1+(8-d.getDay())%7);return toStr(d);};
+const envioDe=k=>primerLunes(mesAdd(k,1));            // día en que se manda el mensaje del mes k
+const mesCiclo=()=>{let k=mesAdd(mesKey(new Date()),-1);if(todayStr()<envioDe(k))k=mesAdd(k,-1);return k;};
+const nomMes=k=>{const [y,m]=k.split('-').map(Number);return new Date(y,m-1,1).toLocaleDateString('es-ES',{month:'long'});};
+const largo=s=>toDate(s).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+S.cMes=mesCiclo();
+
+function cobroDatos(k){
+  const map=new Map();
+  const get=m=>{if(!map.has(m.jugadorId))map.set(m.jugadorId,{id:m.jugadorId,n:jugNombre(m.jugadorId)||m.jugadorNombre||'Jugador borrado',c:0,t:0,pag:0,ant:0});return map.get(m.jugadorId);};
+  S.multas.forEach(m=>{const mk=m.fecha.slice(0,7);
+    if(mk===k){const o=get(m);o.c++;o.t+=m.importe;if(m.pagada)o.pag+=m.importe;}
+    else if(mk<k&&!m.pagada){get(m).ant+=m.importe;}
+  });
+  const filas=[...map.values()].map(o=>({...o,debe:o.t-o.pag})).filter(o=>o.t>0||o.ant>0)
+    .sort((a,b)=>(b.debe>0)-(a.debe>0)||b.debe-a.debe||b.t-a.t||a.n.localeCompare(b.n,'es'));
+  const total=filas.reduce((a,o)=>a+o.t,0), pag=filas.reduce((a,o)=>a+o.pag,0);
+  return {filas,total,pag,debe:total-pag};
+}
+function estadoFila(o){
+  if(o.t<=0) return {cls:'',txt:'Sin multas este mes'};
+  if(o.debe<=0) return {cls:'ok',txt:'✓ Pagado '+eur(o.pag)};
+  if(o.pag>0) return {cls:'part',txt:'Pagado '+eur(o.pag)+' · debe '+eur(o.debe)};
+  return {cls:'debe',txt:'Debe '+eur(o.debe)};
+}
+function renderCobro(){
+  const k=S.cMes, C=cobroDatos(k), env=envioDe(k), hoy=todayStr(), act=mesKey(new Date());
+  $('cMesLbl').textContent=fmtMes(k);
+  $('cMesSub').textContent = k>=act ? 'Mes en curso · se manda el '+corto(env)
+    : hoy<env ? 'Se manda el lunes '+corto(env) : 'Mensaje del lunes '+corto(env);
+  $('cNext').disabled = k>=act;
+  $('cTotal').textContent=eur(C.total); $('cPagado').textContent=eur(C.pag); $('cDebe').textContent=eur(C.debe);
+  $('cBar').style.width=(C.total?Math.round(C.pag/C.total*100):0)+'%';
+  const nd=C.filas.filter(o=>o.debe>0).length;
+  $('cEstado').className='cestado'+(C.total&&!nd?' ok':'');
+  $('cEstado').textContent=!C.total?'':!nd?'✓ Todo cobrado':nd+(nd===1?' jugador debe':' jugadores deben')+' · cobrado el '+Math.round(C.pag/C.total*100)+'%';
+  if(!S.loaded.m){$('cRows').innerHTML='<div class="empty" style="border:0">Cargando…</div>';}
+  else if(!C.filas.length){$('cRows').innerHTML=`<div class="empty" style="border:0">Ninguna multa en ${esc(nomMes(k))}.</div>`;}
+  else $('cRows').innerHTML=C.filas.map(o=>{const e=estadoFila(o);
+    let btn='';
+    if(S.canWrite&&o.t>0){
+      btn = o.debe>0 ? `<button type="button" class="pay" data-cpay="${esc(o.id)}">Pagado</button>`
+        : `<button type="button" class="btn-ghost" data-cundo="${esc(o.id)}">${S.confirm==='cundo:'+o.id?'¿Deshacer?':'Deshacer'}</button>`;
+    }
+    return `<div class="crow ${e.cls}"><span class="n">${esc(o.n)}<small>${o.c} ${o.c===1?'multa':'multas'}${o.ant>0?' · +'+eur(o.ant)+' de meses anteriores':''}</small></span>
+      <span class="t num">${eur(o.t)}</span><span class="s">${e.txt}</span><span class="b">${btn}</span></div>`;}).join('');
+  $('cMsg').textContent='📣 Mensaje de multas de '+nomMes(k);
+  ['cMsg','cEstadoMsg','cFalta'].forEach(id=>$(id).disabled=!C.filas.length);
+  renderAvisoMes();
+}
+function renderAvisoMes(){
+  // Desde el primer lunes y durante esa semana, recordar a Sergio que toca mandar el mensaje
+  const k=mesCiclo(), env=envioDe(k), hoy=todayStr();
+  const show=S.unlocked && hoy>=env && hoy<=addDays(env,6) && cobroDatos(k).total>0;
+  $('avisoMes').hidden=!show;
+  if(show) $('avisoMes').innerHTML=`<div><b>📣 Toca mandar las multas de ${esc(nomMes(k))}</b><span>${hoy===env?'Hoy es el primer lunes del mes':'Primer lunes: '+esc(largo(env))}</span></div><button type="button" class="btn-main" data-avisomes style="width:auto;padding:12px 14px;font-size:16px">Ver</button>`;
+}
+function msgMultas(k){
+  const C=cobroDatos(k);
+  const lines=[...C.filas].sort((a,b)=>b.t-a.t||b.ant-a.ant||a.n.localeCompare(b.n,'es')).map(o=>`• ${o.n}: ${eur(o.t)}${o.ant>0?` (+${eur(o.ant)} pendiente de antes)`:''}`);
+  const ant=C.filas.reduce((a,o)=>a+o.ant,0);
+  return [`*Multas Regi B · ${fmtMes(k)}* 💸`,'',...lines,'',`Total ${nomMes(k)}: *${eur(C.total)}*`+(ant?`\nPendiente de meses anteriores: ${eur(ant)}`:''),'','Toca pagar 💰'].join('\n');
+}
+function msgEstado(k,soloDeben){
+  const C=cobroDatos(k); const fs=C.filas.filter(o=>o.t>0&&(!soloDeben||o.debe>0));
+  const lines=fs.map(o=>o.debe<=0?`✅ ${o.n}: pagado ${eur(o.pag)}`:o.pag>0?`🟡 ${o.n}: pagado ${eur(o.pag)}, debe ${eur(o.debe)}`:`❌ ${o.n}: debe ${eur(o.debe)}`);
+  return [`*Multas ${fmtMes(k)} · ${soloDeben?'Faltan por pagar':'Estado de pagos'}*`,'',...(lines.length?lines:['Todo pagado 👏']),'',`Cobrado ${eur(C.pag)} de ${eur(C.total)} · Falta ${eur(C.debe)}`].join('\n');
+}
+function compartir(titulo,txt){
+  $('shareTitle').textContent=titulo; $('shareTxt').value=txt;
+  $('shareWa').href='https://wa.me/?text='+encodeURIComponent(txt);
+  $('shareDlg').hidden=false;
+}
+$('shareClose').addEventListener('click',()=>$('shareDlg').hidden=true);
+$('shareDlg').addEventListener('click',e=>{if(e.target.id==='shareDlg')$('shareDlg').hidden=true;});
+$('shareCopy').addEventListener('click',()=>copyText($('shareTxt').value));
+$('cPrev').addEventListener('click',()=>{S.cMes=mesAdd(S.cMes,-1);renderCobro();});
+$('cNext').addEventListener('click',()=>{S.cMes=mesAdd(S.cMes,1);renderCobro();});
+$('cMsg').addEventListener('click',()=>compartir('Multas de '+nomMes(S.cMes),msgMultas(S.cMes)));
+$('cEstadoMsg').addEventListener('click',()=>compartir('Estado de pagos',msgEstado(S.cMes,false)));
+$('cFalta').addEventListener('click',()=>compartir('Faltan por pagar',msgEstado(S.cMes,true)));
+$('avisoMes').addEventListener('click',e=>{if(!e.target.closest('[data-avisomes]'))return;S.cMes=mesCiclo();showTab('recuento');renderCobro();$('cobro').scrollIntoView({block:'start'});});
+async function marcarMes(jid,pagada){
+  const list=S.multas.filter(m=>m.jugadorId===jid&&m.fecha.slice(0,7)===S.cMes&&!!m.pagada!==pagada);
+  if(!list.length)return;
+  try{for(let i=0;i<list.length;i+=400){const b=S.db.batch();list.slice(i,i+400).forEach(m=>b.update(S.db.doc('multas/'+m.id),{pagada}));await b.commit();}
+    toast(`${jugNombre(jid)||'Jugador'}: ${pagada?'pagado':'vuelve a deber'} ${eur(list.reduce((a,m)=>a+m.importe,0))}`);}catch(err){fail(err);}
+}
+$('cRows').addEventListener('click',e=>{
+  const p=e.target.closest('[data-cpay]'); if(p){marcarMes(p.dataset.cpay,true);return;}
+  const u=e.target.closest('[data-cundo]'); if(u){const id=u.dataset.cundo; if(S.confirm!=='cundo:'+id){armConfirm('cundo:'+id);return;} S.confirm=null; marcarMes(id,false);}
 });
 
 /* ---------- arranque ---------- */
