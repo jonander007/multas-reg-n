@@ -210,7 +210,7 @@ body.has-bar main{padding-block-end:calc(var(--nav-h,200px) + 24px)}
 .bar .extra{flex-wrap:nowrap;padding:8px 10px}
 .bar .extra>span{min-width:0;font-size:15px;line-height:1.25}
 .bar .extra small{font-size:13px}
-nav.tabs .in{grid-template-columns:repeat(4,minmax(0,1fr))}
+nav.tabs .in{grid-template-columns:repeat(3,minmax(0,1fr))}
 nav.tabs .in button{white-space:nowrap;min-width:0;overflow:hidden}
 .mrow{gap:6px}
 @media (max-width:380px){
@@ -248,6 +248,11 @@ nav.tabs .in button{white-space:nowrap;min-width:0;overflow:hidden}
 .cbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .cbtns .btn-main{grid-column:1/-1}
 .btn-wa{background:#25d366;color:#fff;border-color:transparent;font-weight:600}
+.seg3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.seg3 button{font-size:15px;padding:11px 4px;white-space:nowrap}
+.crow .b{display:flex;gap:6px}
+.crows .detail{border-bottom:1px solid var(--line)}
+.crows .detail:last-child{border-bottom:0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -269,7 +274,52 @@ nav.tabs .in button{white-space:nowrap;min-width:0;overflow:hidden}
   <div id="avisoMes" class="aviso-mes" hidden></div>
 
   <!-- PONER MULTA -->
-  <div id="tab-poner" class="tab">
+  <div class="seg seg3" id="subnav" role="group" aria-label="Zona de Sergio" hidden>
+    <button type="button" data-sub="poner" aria-pressed="true">Poner</button>
+    <button type="button" data-sub="cobros" aria-pressed="false">Cobros</button>
+    <button type="button" data-sub="anadir" aria-pressed="false">Añadir</button>
+  </div>
+
+  <!-- COBROS (zona de Sergio) -->
+  <div id="tab-cobros" class="tab" hidden>
+    <section class="block">
+      <div class="row between"><h2>Quién debe</h2></div>
+      <div class="tot-card">
+        <div><b class="num" id="dTotal">0 €</b><span>Pendiente</span></div>
+        <div><b class="num" id="dJug">0</b><span>Deben</span></div>
+        <div><b class="num" id="dMultas">0</b><span>Multas</span></div>
+      </div>
+      <div class="seg" role="group" aria-label="Filtro">
+        <button type="button" data-dfil="deben" aria-pressed="true">Deben</button>
+        <button type="button" data-dfil="todos" aria-pressed="false">Todos</button>
+      </div>
+      <div class="crows" id="dRows"></div>
+    </section>
+    <section class="block" id="cobro" style="margin-top:28px">
+      <div class="row between"><h2>Resumen mensual</h2></div>
+      <div class="weeknav">
+        <button type="button" id="cPrev" aria-label="Mes anterior">‹</button>
+        <div><b id="cMesLbl"></b><span id="cMesSub"></span></div>
+        <button type="button" id="cNext" aria-label="Mes siguiente">›</button>
+      </div>
+      <div class="tot-card">
+        <div><b class="num" id="cTotal">0 €</b><span>Multas</span></div>
+        <div><b class="num" id="cPagado">0 €</b><span>Pagado</span></div>
+        <div><b class="num" id="cDebe">0 €</b><span>Falta</span></div>
+      </div>
+      <div class="progress" aria-hidden="true"><i id="cBar" style="width:0"></i></div>
+      <div class="cestado" id="cEstado"></div>
+      <div class="crows" id="cRows"></div>
+      <div class="cbtns">
+        <button type="button" class="btn-main" id="cMsg">📣 Mensaje de multas del mes</button>
+        <button type="button" id="cEstadoMsg">Estado de pagos</button>
+        <button type="button" id="cFalta">Solo los que deben</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- PONER MULTA (zona de Sergio) -->
+  <div id="tab-poner" class="tab" hidden>
     <section class="block">
       <div class="label">Día</div>
       <div class="row date-row">
@@ -301,28 +351,7 @@ nav.tabs .in button{white-space:nowrap;min-width:0;overflow:hidden}
 
   <!-- RECUENTO -->
   <div id="tab-recuento" class="tab" hidden>
-    <section class="block" id="cobro">
-      <div class="row between"><h2>Cobro mensual</h2></div>
-      <div class="weeknav">
-        <button type="button" id="cPrev" aria-label="Mes anterior">‹</button>
-        <div><b id="cMesLbl"></b><span id="cMesSub"></span></div>
-        <button type="button" id="cNext" aria-label="Mes siguiente">›</button>
-      </div>
-      <div class="tot-card">
-        <div><b class="num" id="cTotal">0 €</b><span>Multas</span></div>
-        <div><b class="num" id="cPagado">0 €</b><span>Pagado</span></div>
-        <div><b class="num" id="cDebe">0 €</b><span>Falta</span></div>
-      </div>
-      <div class="progress" aria-hidden="true"><i id="cBar" style="width:0"></i></div>
-      <div class="cestado" id="cEstado"></div>
-      <div class="crows" id="cRows"></div>
-      <div class="cbtns">
-        <button type="button" class="btn-main" id="cMsg">📣 Mensaje de multas del mes</button>
-        <button type="button" id="cEstadoMsg">Estado de pagos</button>
-        <button type="button" id="cFalta">Solo los que deben</button>
-      </div>
-    </section>
-    <section class="block" style="margin-top:28px">
+    <section class="block">
       <div class="row between"><h2>Resumen</h2></div>
       <div class="seg" role="group" aria-label="Tipo de resumen">
         <button type="button" data-rmodo="sem" aria-pressed="true">Semanal</button>
@@ -448,21 +477,17 @@ nav.tabs .in button{white-space:nowrap;min-width:0;overflow:hidden}
     </div>
   </div>
   <div class="in" role="tablist">
-    <button role="tab" data-tab="poner" data-lock aria-selected="true" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="2" fill="currentColor" fill-opacity=".15"/><path d="M12 8v5M12 16.5v.5" stroke-linecap="round"/></svg>
-      <span><span class="lk">🔒 </span>Poner</span>
-    </button>
-    <button role="tab" data-tab="multas" aria-selected="false" type="button" style="order:1">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h12M8 12h12M8 18h12" stroke-linecap="round"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>
-      Multas
-    </button>
-    <button role="tab" data-tab="recuento" aria-selected="false" type="button">
+    <button role="tab" data-tab="recuento" aria-selected="true" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4" stroke-linecap="round"/></svg>
       Recuento
     </button>
-    <button role="tab" data-tab="anadir" data-lock aria-selected="false" type="button" style="order:2">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8" stroke-linecap="round"/></svg>
-      <span><span class="lk">🔒 </span>Añadir</span>
+    <button role="tab" data-tab="multas" aria-selected="false" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h12M8 12h12M8 18h12" stroke-linecap="round"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>
+      Multas
+    </button>
+    <button role="tab" data-tab="gestion" data-lock aria-selected="false" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="2" fill="currentColor" fill-opacity=".15"/><path d="M12 8v5M12 16.5v.5" stroke-linecap="round"/></svg>
+      <span><span class="lk">🔒 </span>Sergio</span>
     </button>
   </div>
 </nav>
@@ -506,7 +531,7 @@ const fmtMes = s => {const [y,m]=s.split('-').map(Number);const t=new Date(y,m-1
 const S = {
   db:null, jugadores:[], tipos:[], multas:[], loaded:{j:false,t:false,m:false}, canWrite:false, unlocked:false,
   fecha: todayStr(), sel:new Set(), tipoId:null, cantidad:1, minutos:0, busca:'',
-  open:new Set(), confirm:null, hJug:'todos', hTipo:'todos', hMes:'todos', rModo:'sem', semana:null, editJug:null, editTipo:null, tab:'poner', fMes:'todos', fEstado:'pend'
+  open:new Set(), confirm:null, hJug:'todos', hTipo:'todos', hMes:'todos', rModo:'sem', semana:null, editJug:null, editTipo:null, tab:'recuento', sub:'poner', dFil:'deben', dOpen:new Set(), fMes:'todos', fEstado:'pend'
 };
 
 /* ---------- helpers de datos ---------- */
@@ -529,7 +554,7 @@ function detalleTxt(m){
 function render(){
   const pend = S.multas.filter(m=>!m.pagada).reduce((a,m)=>a+(Number(m.importe)||0),0);
   $('bote').textContent = eur(pend);
-  renderPoner(); renderResumen(); renderCobro(); renderRecuento(); renderMultas(); renderAnadir();
+  renderPoner(); renderResumen(); renderCobro(); renderDeudas(); renderRecuento(); renderMultas(); renderAnadir();
 }
 
 function renderPoner(){
@@ -538,7 +563,7 @@ function renderPoner(){
   const q = S.busca.trim().toLowerCase();
   const js = S.jugadores.filter(j=>!q || j.nombre.toLowerCase().includes(q));
   $('chips').innerHTML = !S.loaded.j ? '<div class="empty">Cargando jugadores…</div>'
-    : !S.jugadores.length ? '<div class="empty">Aún no hay jugadores. Añádelos en la pestaña Añadir.</div>'
+    : !S.jugadores.length ? '<div class="empty">Aún no hay jugadores. Añádelos en «Añadir».</div>'
     : js.map(j=>`<button type="button" class="chip" data-j="${esc(j.id)}" aria-pressed="${S.sel.has(j.id)}">${esc(j.nombre)}</button>`).join('') || '<div class="empty">Ningún jugador con ese nombre.</div>';
   $('selCount').textContent = S.sel.size>1 ? '· '+S.sel.size+' marcados' : '';
   $('clearSel').hidden = !S.sel.size;
@@ -622,12 +647,12 @@ function renderRecuento(){
         const rows=[...g.entries()].sort((a,b)=>b[1].s-a[1].s).map(([k,o])=>`<tr><td>${esc(k)}</td><td class="num">×${o.n}</td><td class="num">${eur(o.s)}</td></tr>`).join('');
         const its=[...p.items].sort((a,b)=>b.fecha.localeCompare(a.fecha)||(b.creado||0)-(a.creado||0)).map(m=>`
           <div class="it${m.pagada?' paid':''}"><span class="d">${esc(fmtFecha(m.fecha))}</span><span class="c">${esc(detalleTxt(m))}</span><span class="a num">${eur(m.importe)}</span>
-          ${S.canWrite?`<button type="button" class="tag${m.pagada?' on':''}" data-pay="${esc(m.id)}">${m.pagada?'Pagada':'Pendiente'}</button>`:`<span class="tag${m.pagada?' on':''}">${m.pagada?'Pagada':'Pendiente'}</span>`}</div>`).join('');
+          ${false?`<button type="button" class="tag${m.pagada?' on':''}" data-pay="${esc(m.id)}">${m.pagada?'Pagada':'Pendiente'}</button>`:`<span class="tag${m.pagada?' on':''}">${m.pagada?'Pagada':'Pendiente'}</span>`}</div>`).join('');
         const pendN=p.items.filter(m=>!m.pagada).length;
         det=`<div class="detail">
           <div><div class="label" style="margin-bottom:6px">Por tipo de multa</div><table class="bd"><tbody>${rows}</tbody></table></div>
           <div><div class="label" style="margin-bottom:6px">Por fecha</div>${its}</div>
-          ${S.canWrite&&pendN?`<button type="button" data-payall="${esc(p.id)}">${S.confirm==='pay:'+p.id?'Confirmar: '+pendN+' multas pagadas':'Marcar todo como pagado'}</button>`:''}
+          ${false&&pendN?`<button type="button" data-payall="${esc(p.id)}">${S.confirm==='pay:'+p.id?'Confirmar: '+pendN+' multas pagadas':'Marcar todo como pagado'}</button>`:''}
         </div>`;
       }
     }
@@ -654,7 +679,7 @@ function renderMultas(){
   $('hCount').textContent=ms.length+(ms.length===1?' multa':' multas');
   $('hTotal').textContent=eur(ms.reduce((a,m)=>a+m.importe,0));
   if(!S.loaded.m){$('hList').innerHTML='<div class="empty">Cargando…</div>';}
-  else if(!ms.length){$('hList').innerHTML=`<div class="empty">${S.multas.length?'Ninguna multa con estos filtros.':'Todavía no se ha puesto ninguna multa. Ponlas desde la pestaña Poner.'}</div>`;}
+  else if(!ms.length){$('hList').innerHTML=`<div class="empty">${S.multas.length?'Ninguna multa con estos filtros.':'Todavía no se ha puesto ninguna multa. Sergio las pone desde su pestaña.'}</div>`;}
   else{
     const g=new Map(); ms.forEach(m=>{if(!g.has(m.fecha))g.set(m.fecha,[]);g.get(m.fecha).push(m);});
     $('hList').innerHTML=[...g.entries()].map(([f,arr])=>`<div class="hday"><span>${esc(fmtFecha(f))}</span><span class="num">${eur(arr.reduce((a,m)=>a+m.importe,0))}</span></div>`+
@@ -748,7 +773,7 @@ let confirmT; function armConfirm(k){S.confirm=k;clearTimeout(confirmT);confirmT
 
 /* ---------- eventos ---------- */
 /* ---------- bloqueo con contraseña (solo Sergio pone multas) ---------- */
-const LOCKED_TABS=['poner','anadir'];
+const LOCKED_TABS=['poner','cobros','anadir'];
 let pendingTab=null;
 function setUnlocked(v){
   S.unlocked=v; S.canWrite=v;
@@ -783,13 +808,17 @@ $('lockBtn').addEventListener('click',async()=>{try{await auth.signOut();}catch(
 function showTab(tab){
   if(LOCKED_TABS.includes(tab) && !S.unlocked){askPass(tab);return;}
   S.tab=tab;
-  document.querySelectorAll('nav.tabs [data-tab]').forEach(x=>x.setAttribute('aria-selected',x.dataset.tab===tab));
+  const zona=LOCKED_TABS.includes(tab); if(zona) S.sub=tab;
+  document.querySelectorAll('nav.tabs [data-tab]').forEach(x=>x.setAttribute('aria-selected',x.dataset.tab===tab||(zona&&x.dataset.tab==='gestion')));
+  $('subnav').hidden=!zona;
+  document.querySelectorAll('[data-sub]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.sub===tab));
   document.querySelectorAll('.tab').forEach(t=>t.hidden=t.id!=='tab-'+S.tab);
   $('bar').hidden = S.tab!=='poner'; document.body.classList.toggle('has-bar',S.tab==='poner');
   try{localStorage.setItem('multas-tab',S.tab);}catch(e){}
   window.scrollTo(0,0);
 }
-document.querySelectorAll('nav.tabs [data-tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+document.querySelectorAll('nav.tabs [data-tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab==='gestion'?(S.sub||'poner'):b.dataset.tab)));
+document.querySelectorAll('[data-sub]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.sub)));
 $('fecha').addEventListener('change',e=>{S.fecha=e.target.value||todayStr();render();});
 $('hoy').addEventListener('click',()=>{S.fecha=todayStr();render();});
 $('buscaJug').addEventListener('input',e=>{S.busca=e.target.value;renderPoner();});
@@ -961,7 +990,7 @@ $('cNext').addEventListener('click',()=>{S.cMes=mesAdd(S.cMes,1);renderCobro();}
 $('cMsg').addEventListener('click',()=>compartir('Multas de '+nomMes(S.cMes),msgMultas(S.cMes)));
 $('cEstadoMsg').addEventListener('click',()=>compartir('Estado de pagos',msgEstado(S.cMes,false)));
 $('cFalta').addEventListener('click',()=>compartir('Faltan por pagar',msgEstado(S.cMes,true)));
-$('avisoMes').addEventListener('click',e=>{if(!e.target.closest('[data-avisomes]'))return;S.cMes=mesCiclo();showTab('recuento');renderCobro();$('cobro').scrollIntoView({block:'start'});});
+$('avisoMes').addEventListener('click',e=>{if(!e.target.closest('[data-avisomes]'))return;S.cMes=mesCiclo();showTab('cobros');renderCobro();$('cobro').scrollIntoView({block:'start'});});
 async function marcarMes(jid,pagada){
   const list=S.multas.filter(m=>m.jugadorId===jid&&m.fecha.slice(0,7)===S.cMes&&!!m.pagada!==pagada);
   if(!list.length)return;
@@ -973,13 +1002,55 @@ $('cRows').addEventListener('click',e=>{
   const u=e.target.closest('[data-cundo]'); if(u){const id=u.dataset.cundo; if(S.confirm!=='cundo:'+id){armConfirm('cundo:'+id);return;} S.confirm=null; marcarMes(id,false);}
 });
 
+/* ---------- quién debe (zona de Sergio) ---------- */
+const mesCorto=k=>{const [y,m]=k.split('-').map(Number);return new Date(y,m-1,1).toLocaleDateString('es-ES',{month:'short'}).replace('.','');};
+function renderDeudas(){
+  const map=new Map();
+  S.jugadores.forEach(j=>map.set(j.id,{id:j.id,n:j.nombre,items:[]}));
+  S.multas.forEach(m=>{if(!map.has(m.jugadorId))map.set(m.jugadorId,{id:m.jugadorId,n:m.jugadorNombre||'Jugador borrado',items:[],borrado:true});map.get(m.jugadorId).items.push(m);});
+  const arr=[...map.values()].map(o=>{const pend=o.items.filter(m=>!m.pagada);const meses=new Map();pend.forEach(m=>{const k=m.fecha.slice(0,7);meses.set(k,(meses.get(k)||0)+m.importe);});
+    return {...o,pend,debe:pend.reduce((a,m)=>a+m.importe,0),meses:[...meses.entries()].sort((a,b)=>b[0].localeCompare(a[0]))};})
+    .filter(o=>!o.borrado||o.items.length)
+    .sort((a,b)=>b.debe-a.debe||a.n.localeCompare(b.n,'es',{numeric:true}));
+  const deben=arr.filter(o=>o.debe>0);
+  $('dTotal').textContent=eur(deben.reduce((a,o)=>a+o.debe,0)); $('dJug').textContent=deben.length; $('dMultas').textContent=deben.reduce((a,o)=>a+o.pend.length,0);
+  document.querySelectorAll('[data-dfil]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.dfil===S.dFil));
+  const list=S.dFil==='deben'?deben:arr;
+  if(!S.loaded.m||!S.loaded.j){$('dRows').innerHTML='<div class="empty" style="border:0">Cargando…</div>';return;}
+  if(!list.length){$('dRows').innerHTML=`<div class="empty" style="border:0">${S.dFil==='deben'?'Nadie debe nada 👏':'No hay jugadores.'}</div>`;return;}
+  $('dRows').innerHTML=list.map(o=>{
+    const open=S.dOpen.has(o.id);
+    const sub=o.debe>0?o.meses.map(([k,v])=>mesCorto(k)+' '+eur(v)).join(' · '):(o.items.length?o.items.length+(o.items.length===1?' multa pagada':' multas pagadas'):'Sin multas');
+    const btns=(o.items.length?`<button type="button" class="btn-ghost" data-dver="${esc(o.id)}" aria-expanded="${open}">${open?'Ocultar':'Ver'}</button>`:'')+
+      (o.debe>0&&S.canWrite?`<button type="button" class="pay" data-dpay="${esc(o.id)}">${S.confirm==='dpay:'+o.id?'¿Pagado '+eur(o.debe)+'?':'Pagado'}</button>`:'');
+    let det='';
+    if(open){
+      const its=[...o.items].sort((a,b)=>(a.pagada-b.pagada)||b.fecha.localeCompare(a.fecha)).map(m=>`
+        <div class="it${m.pagada?' paid':''}"><span class="d">${esc(fmtFecha(m.fecha))}</span><span class="c">${esc(detalleTxt(m))}</span><span class="a num">${eur(m.importe)}</span>
+        ${S.canWrite?`<button type="button" class="tag${m.pagada?' on':''}" data-pay="${esc(m.id)}">${m.pagada?'Pagada':'Pendiente'}</button>`:`<span class="tag${m.pagada?' on':''}">${m.pagada?'Pagada':'Pendiente'}</span>`}</div>`).join('');
+      det=`<div class="detail">${its}</div>`;
+    }
+    return `<div class="crow ${o.debe>0?'debe':'ok'}"><span class="n">${esc(o.n)}<small>${esc(sub)}</small></span>
+      <span class="t num">${eur(o.debe)}</span><span class="s">${o.debe>0?'Debe '+eur(o.debe):'✓ Al día'}</span><span class="b">${btns}</span></div>${det}`;
+  }).join('');
+}
+document.querySelectorAll('[data-dfil]').forEach(b=>b.addEventListener('click',()=>{S.dFil=b.dataset.dfil;renderDeudas();}));
+$('dRows').addEventListener('click',async e=>{
+  const v=e.target.closest('[data-dver]'); if(v){const id=v.dataset.dver;S.dOpen.has(id)?S.dOpen.delete(id):S.dOpen.add(id);renderDeudas();return;}
+  const p=e.target.closest('[data-dpay]'); if(p){const id=p.dataset.dpay; if(S.confirm!=='dpay:'+id){armConfirm('dpay:'+id);return;} S.confirm=null;
+    const list=S.multas.filter(m=>m.jugadorId===id&&!m.pagada); if(!list.length)return;
+    try{for(let i=0;i<list.length;i+=400){const b=S.db.batch();list.slice(i,i+400).forEach(m=>b.update(S.db.doc('multas/'+m.id),{pagada:true}));await b.commit();}
+      toast(`${jugNombre(id)||'Jugador'}: pagado ${eur(list.reduce((a,m)=>a+m.importe,0))}`);}catch(err){fail(err);} return;}
+  const t=e.target.closest('[data-pay]'); if(t){const m=S.multas.find(x=>x.id===t.dataset.pay);if(!m)return;try{await S.db.doc('multas/'+m.id).update({pagada:!m.pagada});}catch(err){fail(err);}}
+});
+
 /* ---------- arranque ---------- */
 const navEl=document.querySelector('nav.tabs');
 const syncNavH=()=>document.documentElement.style.setProperty('--nav-h',navEl.offsetHeight+'px');
 try{new ResizeObserver(syncNavH).observe(navEl);}catch(e){window.addEventListener('resize',syncNavH);}
 syncNavH();
-let startTab='poner'; try{startTab=localStorage.getItem('multas-tab')||'poner';}catch(e){}
-if(!document.querySelector(`nav.tabs [data-tab="${startTab}"]`)) startTab='poner';
+let startTab='recuento'; try{startTab=localStorage.getItem('multas-tab')||'recuento';}catch(e){}
+if(!['recuento','multas',...LOCKED_TABS].includes(startTab)) startTab='recuento';
 setUnlocked(false);
 showTab(LOCKED_TABS.includes(startTab)?'recuento':startTab);
 
